@@ -1,0 +1,67 @@
+from moto import mock_aws
+from pantomime import PLAIN
+
+from leakrfc.archive import get_archive, get_dataset
+from leakrfc.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
+from tests.conftest import setup_s3
+
+
+def _test_dataset(dataset: DatasetArchive | ReadOnlyDatasetArchive):
+    files = [f for f in dataset.iter_files()]
+    assert len(files) == 74
+
+    key = "utf.txt"
+    content_hash = "5a6acf229ba576d9a40b09292595658bbb74ef56"
+
+    # lookup by key
+    assert dataset.exists(key)
+    file = dataset.lookup_file(key)
+    assert file.key == "utf.txt"
+    assert file.content_hash == content_hash
+    assert file.mimetype == PLAIN
+    with dataset.open_file(file) as fh:
+        assert fh.read() == "Îș unî©ođ€.\n".encode()
+
+    # lookup by hash
+    assert dataset.exists_hash(content_hash)
+    file = dataset.lookup_file_by_hash(content_hash)
+    assert file.key == "utf.txt"
+    assert file.content_hash == content_hash
+    assert file.mimetype == PLAIN
+    with dataset.open_file(file) as fh:
+        assert fh.read() == "Îș unî©ođ€.\n".encode()
+
+    assert b"\n".join(dataset.stream_file(file)) == "Îș unî©ođ€.\n".encode()
+
+    return True
+
+
+def test_archive_datasets():
+    archive = get_archive()
+    datasets = [a.name for a in archive.get_datasets()]
+    assert set(datasets) == set(["test_dataset", "s3_dataset"])
+
+
+def test_archive_dataset(test_dataset):
+    assert _test_dataset(test_dataset)
+
+
+# def test_archive_remote_dataset():
+#     dataset = _test_archive_dataset("remote_dataset")
+#     assert dataset.store.readonly
+#     assert dataset.readonly
+#     assert isinstance(dataset, ReadOnlyDatasetArchive)
+
+
+def test_archive_zip_dataset(fixtures_path):
+    dataset = get_dataset("test_dataset", uri=fixtures_path / "test_dataset.leakrfc")
+    assert _test_dataset(dataset)
+    # assert dataset.store.readonly
+    # assert dataset.readonly
+    # assert isinstance(dataset, ReadOnlyDatasetArchive)
+
+
+# @mock_aws
+# def test_archive_s3_dataset():
+#     setup_s3()
+#     assert _test_archive_dataset("s3_dataset")

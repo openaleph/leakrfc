@@ -1,0 +1,203 @@
+from typing import Annotated, Any, Optional, TypedDict
+
+import orjson
+import typer
+from anystore.io import smart_open, smart_write
+from pydantic import BaseModel
+from rich.console import Console
+
+from leakrfc import __version__
+from leakrfc.archive import configure_archive, get_dataset
+from leakrfc.archive.dataset import DatasetArchive
+from leakrfc.crawl import crawl
+from leakrfc.exceptions import ImproperlyConfigured
+from leakrfc.export import export_dataset
+
+# from leakrfc.ingest import ingest_dataset
+from leakrfc.logging import configure_logging
+from leakrfc.make import make_dataset
+from leakrfc.settings import ArchiveSettings, Settings
+from leakrfc.sync.aleph import sync_to_aleph
+from leakrfc.sync.memorious import import_memorious
+
+settings = Settings()
+archive_settings = ArchiveSettings()
+cli = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=settings.debug)
+sync = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=settings.debug)
+cli.add_typer(sync, name="sync")
+console = Console(stderr=True)
+
+
+class State(TypedDict):
+    dataset: DatasetArchive | None
+
+
+STATE: State = {"dataset": None}
+
+
+def write_obj(obj: BaseModel | None, out: str) -> None:
+    if out == "-":
+        console.print(obj)
+    else:
+        if obj is not None:
+            smart_write(
+                out, orjson.dumps(obj.model_dump(), option=orjson.OPT_APPEND_NEWLINE)
+            )
+
+
+class ErrorHandler:
+    def __enter__(self) -> Any:
+        pass
+
+    def __exit__(self, exc_cls, exc, _):
+        if exc_cls is not None:
+            if isinstance(exc, BrokenPipeError):
+                return
+            if settings.debug:
+                raise exc
+            console.print(f"[red][bold]{exc_cls.__name__}[/bold]: {exc}[/red]")
+            raise typer.Exit(code=1)
+
+
+class Dataset(ErrorHandler):
+    def __enter__(self) -> DatasetArchive:
+        if not STATE["dataset"]:
+            e = ImproperlyConfigured("Specify dataset foreign_id with `-d` option!")
+            if settings.debug:
+                raise e
+            console.print(f"[red][bold]{e.__class__.__name__}[/bold]: {e}[/red]")
+            raise typer.Exit(code=1)
+        return STATE["dataset"]
+
+
+@cli.callback(invoke_without_command=True)
+def cli_leakrfc(
+    version: Annotated[Optional[bool], typer.Option(..., help="Show version")] = False,
+    dataset: Annotated[
+        str | None, typer.Option("-d", help="Dataset foreign_id")
+    ] = None,
+):
+    if version:
+        console.print(__version__)
+        raise typer.Exit()
+    configure_logging()
+    if dataset:
+        STATE["dataset"] = get_dataset(dataset)
+
+
+@cli.command("config")
+def cli_config():
+    """
+    Print current runtime configuration for base archive or given dataset
+    """
+    with ErrorHandler():
+        archive = configure_archive()
+        dataset = STATE["dataset"]
+        write_obj(settings, "-")
+        write_obj(archive, "-")
+        write_obj(dataset, "-")
+
+
+@cli.command("make")
+def cli_make(out_uri: Annotated[str, typer.Option("-o")] = "-"):
+    """
+    Make or update a leakrfc dataset and check integrity
+    """
+    with Dataset() as dataset:
+        res = make_dataset(dataset)
+        write_obj(res, out_uri)
+
+
+@cli.command("get")
+def cli_get(key: str, out_uri: Annotated[str, typer.Option("-o")] = "-"):
+    """
+    Retrieve a file from dataset archive and write to out uri (default: stdout)
+    """
+    with Dataset() as dataset:
+        file = dataset.lookup_file(key)
+        with dataset.open_file(file) as i, smart_open(out_uri, "wb") as o:
+            o.write(i.read())
+
+
+@cli.command("head")
+def cli_head(key: str, out_uri: Annotated[str, typer.Option("-o")] = "-"):
+    """
+    Retrieve a file info from dataset archive and write to out uri (default: stdout)
+    """
+    with Dataset() as dataset:
+        smart_write(
+            out_uri,
+            orjson.dumps(
+                dataset.lookup_file(key).model_dump(),
+                option=orjson.OPT_APPEND_NEWLINE,
+            ),
+        )
+
+
+@cli.command("ls")
+def cli_ls(
+    out_uri: Annotated[str, typer.Option("-o")] = "-",
+    keys: Annotated[bool, typer.Option(help="Show only keys")] = False,
+):
+    """
+    List all files in dataset archive
+    """
+    with Dataset() as dataset:
+        if keys:
+            files = (f.key.encode() + b"\n" for f in dataset.iter_files())
+        else:
+            files = (
+                orjson.dumps(f.model_dump(), option=orjson.OPT_APPEND_NEWLINE)
+                for f in dataset.iter_files()
+            )
+        with smart_open(out_uri, "wb") as o:
+            o.writelines(files)
+
+
+@cli.command("crawl")
+def cli_crawl(uri: str):
+    """
+    Crawl documents from local or remote sources
+    """
+    with Dataset() as dataset:
+        crawl(uri, dataset)
+
+
+@cli.command("export")
+def cli_export(out: str):
+    """
+    Export a complete dataset in LeakRFC format
+    """
+    with Dataset() as dataset:
+        export_dataset(dataset, out)
+
+
+# @cli.command("ingest")
+# def cli_ingest():
+#     """
+#     (Re-)ingest dataset
+#     """
+#     with Dataset() as dataset:
+#         ingest_dataset(dataset)
+
+
+@sync.command("memorious")
+def cli_sync_memorious(uri: Annotated[str, typer.Option("-i")]):
+    """
+    Sync a memorious data store into a leakrfc dataset
+    """
+    with Dataset() as dataset:
+        import_memorious(dataset, uri)
+
+
+@sync.command("aleph")
+def cli_sync_aleph(
+    host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
+    api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
+    folder: Annotated[Optional[str], typer.Option(help="Base folder path")] = None,
+):
+    """
+    Sync a leakrfc dataset to Aleph
+    """
+    with Dataset() as dataset:
+        sync_to_aleph(dataset, host, api_key, prefix=folder)

@@ -1,0 +1,62 @@
+[tool.poetry]
+name = "leakrfc"
+version = "0.0.0"
+description = "Data standard, storage and retrieval for leaks and document collections"
+authors = ["Simon Wörpel <simon.woerpel@pm.me>"]
+license = "AGPLv3+"
+readme = "README.md"
+homepage = "https://github.com/investigativedata/leakrfc"
+repository = "https://github.com/investigativedata/leakrfc"
+documentation = "https://github.com/investigativedata/leakrfc"
+classifiers = [
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+packages = [{ include = "leakrfc" }]
+
+[tool.poetry.scripts]
+leakrfc = "leakrfc.cli:cli"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/investigativedata/leakrfc/issues"
+
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4"
+ftmq = "^0.6.14"
+typer = "^0.12.5"
+anystore = {git = "https://github.com/investigativedata/anystore.git", rev = "develop"}
+fastapi = "^0.115.0"
+rich = "^13.8.1"
+uvicorn = "^0.30.6"
+pantomime = "^0.6.1"
+pyjwt = "^2.9.0"
+fsspec = "^2024.9.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+pytest-cov = ">=4.1,<6.0"
+pytest-env = "^1.1.1"
+black = ">=23.11,<25.0"
+isort = "^5.12.0"
+mypy = "^1.7.0"
+pre-commit = "^3.5.0"
+flake8 = ">=6.1,<8.0"
+ipdb = "^0.13.13"
+bump2version = "^1.0.1"
+moto = "^5.0.11"
+pytest-asyncio = ">=0.23.8,<0.25.0"
+rangehttpserver = "^1.4.0"
+httpx = "^0.27.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+env = ["DEBUG=1", "LEAKRFC_URI=tests/fixtures/archive.yml"]
