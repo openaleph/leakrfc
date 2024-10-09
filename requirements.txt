@@ -114,7 +114,10 @@ annotated-types==0.7.0 ; python_version >= "3.11" and python_version < "4" \
 anyio==4.6.0 ; python_version >= "3.11" and python_version < "4" \
     --hash=sha256:137b4559cbb034c477165047febb6ff83f390fc3b20bf181c1fc0a728cb8beeb \
     --hash=sha256:c7d2e9d63e31599eeb636c8c5c03a7e108d73b345f064f1c19fdc87b79036a9a
-anystore @ git+https://github.com/investigativedata/anystore.git@665e53556d2046e9af4376bf93e542b0a93f5bb3 ; python_version >= "3.11" and python_version < "4"
+anystore @ git+https://github.com/investigativedata/anystore.git@41e138b9952cea18dfd85852d9c1bc51beb34ffc ; python_version >= "3.11" and python_version < "4"
+asyncssh==2.17.0 ; python_version >= "3.11" and python_version < "4" \
+    --hash=sha256:3b159c105aa388c1e2245c4faf483f540ada8cad99402281119100166e5edb3c \
+    --hash=sha256:70bfe4081793255b0115f7a72efd92d5bad8562639302531223bb00188db9747
 attrs==24.2.0 ; python_version >= "3.11" and python_version < "4" \
     --hash=sha256:5cfb1b9148b5b086569baec03f20d7b6bf3bcacc9a42bebf87ffaaca362f6346 \
     --hash=sha256:81921eb96de3191c8258c199618104dd27ac608d9366f5e35d011eae1867ede2
@@ -1525,6 +1528,9 @@ sqlalchemy==2.0.35 ; python_version >= "3.11" and python_version < "4" \
     --hash=sha256:eb60b026d8ad0c97917cb81d3662d0b39b8ff1335e3fabb24984c6acd0c900a2 \
     --hash=sha256:f021d334f2ca692523aaf7bbf7592ceff70c8594fad853416a81d66b35e3abf9 \
     --hash=sha256:f552023710d4b93d8fb29a91fadf97de89c5926c6bd758897875435f2a939f33
+sshfs==2024.9.0 ; python_version >= "3.11" and python_version < "4" \
+    --hash=sha256:53589de34083f7f59203473526d80d9b1692267c37bf51f007d589660feaf458 \
+    --hash=sha256:bc3f4bd33b20b3e5fd8fbbf640d0b87d8a9531ff8e94a7beb8778d3853b07053
 starlette==0.38.6 ; python_version >= "3.11" and python_version < "4" \
     --hash=sha256:4517a1409e2e73ee4951214ba012052b9e16f60e90d73cfb06192c19203bbb05 \
     --hash=sha256:863a1588f5574e70a821dadefb41e4881ea451a47a3cd1b4df359d4ffefe5ead
