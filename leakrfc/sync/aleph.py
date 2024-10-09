@@ -31,6 +31,7 @@ class AlephUploadWorker(DatasetWorker):
         host: str | None = None,
         api_key: str | None = None,
         prefix: str | None = None,
+        foreign_id: str | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -38,8 +39,9 @@ class AlephUploadWorker(DatasetWorker):
         self.tmp = get_virtual(f"leakrfc-{self.dataset.name}-")
         self.api = aleph.get_api(host, api_key)
         self.host = aleph.get_host(self.api)
+        self.foreign_id = foreign_id or self.dataset.name
         self.collection_id = aleph.get_or_create_collection_id(
-            self.dataset.name, self.api
+            self.foreign_id, self.api
         )
         self.prefix = prefix
         self.consumer_threads = min(10, self.consumer_threads)  # urllib connection pool
@@ -61,7 +63,9 @@ class AlephUploadWorker(DatasetWorker):
             "host": self.host,
         }
         self.log_info(
-            f"Uploading `{task.key}` ({task.content_hash}) ...", aleph=self.host
+            f"Uploading `{task.key}` ({task.content_hash}) ...",
+            aleph=self.host,
+            foreign_id=self.foreign_id,
         )
         metadata = {**task.extra, "file_name": task.name, "foreign_id": task.key}
         metadata["source_url"] = metadata.get("url")
@@ -79,7 +83,9 @@ class AlephUploadWorker(DatasetWorker):
         self.log_info(
             f"Upload complete. Aleph id: `{res['id']}`",
             content_hash=task.content_hash,
+            aleph=self.host,
             file=task.key,
+            foreign_id=self.foreign_id,
         )
         return res
 
@@ -93,7 +99,14 @@ def sync_to_aleph(
     host: str | None,
     api_key: str | None,
     prefix: str | None = None,
+    foreign_id: str | None = None,
 ) -> None:
-    worker = AlephUploadWorker(host, api_key, prefix, dataset)
+    worker = AlephUploadWorker(
+        dataset=dataset,
+        host=host,
+        api_key=api_key,
+        prefix=prefix,
+        foreign_id=foreign_id,
+    )
     worker.log_info(f"Starting sync to Aleph `{worker.host}` ...")
     worker.run()

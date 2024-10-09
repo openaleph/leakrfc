@@ -195,9 +195,18 @@ def cli_sync_aleph(
     host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
     api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
     folder: Annotated[Optional[str], typer.Option(help="Base folder path")] = None,
+    foreign_id: Annotated[
+        Optional[str], typer.Option(help="Aleph foreign_id (if different from dataset)")
+    ] = None,
 ):
     """
     Sync a leakrfc dataset to Aleph
     """
     with Dataset() as dataset:
-        sync_to_aleph(dataset, host, api_key, prefix=folder)
+        sync_to_aleph(
+            dataset=dataset,
+            host=host,
+            api_key=api_key,
+            prefix=folder,
+            foreign_id=foreign_id,
+        )
