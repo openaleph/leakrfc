@@ -41,9 +41,10 @@ class LeakrfcWorker(DatasetWorker):
 
     def get_tasks(self) -> Generator[Task, None, None]:
         self.log_info("Checking source files ...")
-        for key in self.dataset._storage.iterate_keys():
-            if not key.startswith(self.dataset.metadata_prefix):
-                yield key, ACTION_SOURCE
+        for key in self.dataset._storage.iterate_keys(
+            exclude_prefix=self.dataset.metadata_prefix
+        ):
+            yield key, ACTION_SOURCE
         self.log_info("Checking source files ...")
         for file in super().get_tasks():
             yield file.key, ACTION_INFO
