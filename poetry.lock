@@ -279,7 +279,7 @@ typer = ">=0.9,<0.13"
 type = "git"
 url = "https://github.com/investigativedata/anystore.git"
 reference = "develop"
-resolved_reference = "5e00425d47370f0d6e2f2e44d47aad27949c79e0"
+resolved_reference = "57b774eacd6252f5a37f24afecf153e2a4af6c6b"
 
 [[package]]
 name = "asttokens"

@@ -54,7 +54,6 @@ class MemoriousWorker(DatasetWorker):
             return OriginalFile(
                 key=str(p).lstrip("/"),
                 name=p.name,
-                path=str(p.parent).lstrip("/"),
                 size=info.size,
                 content_hash=content_hash,
                 store=str(self.memorious.uri),
