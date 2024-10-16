@@ -16,14 +16,28 @@ from leakrfc.model import OriginalFile
 from leakrfc.worker import DatasetWorker
 
 
-def get_upload_cache_key(self: "AlephUploadWorker", file: OriginalFile) -> str:
+def _make_cache_key(self: "AlephUploadWorker", *parts: str) -> str:
     host = urlparse(self.host).netloc
-    return f"aleph/upload/{host}/{self.dataset.name}/{file.key}"
+    base = f"aleph/upload/{host}/{self.dataset.name}/"
+    return base + "/".join(parts)
+
+
+def get_upload_cache_key(self: "AlephUploadWorker", file: OriginalFile) -> str:
+    return _make_cache_key(self, file.key)
+
+
+def get_parent_cache_key(
+    self: "AlephUploadWorker", key: str, prefix: str | None = None
+) -> str:
+    parts = [key]
+    if prefix:
+        parts += prefix
+    return _make_cache_key(self, *parts)
 
 
 class AlephUploadWorker(DatasetWorker):
     """
-    Sync leakrfc to an Aleph instance
+    Sync leakrfc dataset to an Aleph instance
     """
 
     def __init__(
@@ -46,6 +60,7 @@ class AlephUploadWorker(DatasetWorker):
         self.prefix = prefix
         self.consumer_threads = min(10, self.consumer_threads)  # urllib connection pool
 
+    @anycache(key_func=get_parent_cache_key)
     def get_parent(self, key: str, prefix: str | None = None) -> dict[str, str] | None:
         with self.lock:
             p = Path(key)
