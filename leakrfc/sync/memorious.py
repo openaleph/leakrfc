@@ -39,6 +39,11 @@ class MemoriousWorker(DatasetWorker):
                     store=self.memorious,
                     file=file,
                 )
+            else:
+                self.log_info(
+                    f"Skipping already existing `{file.key}` ...",
+                    store=self.memorious.uri,
+                )
 
     def load_memorious(self, key: str) -> OriginalFile | None:
         data = self.memorious.get(key, serialization_mode="json")
