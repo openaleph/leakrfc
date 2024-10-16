@@ -27,7 +27,6 @@ def get_file_header(file: File) -> dict[str, str]:
     return clean_dict(
         {
             **get_base_header(file.dataset, file.content_hash),
-            "x-leakrfc-path": file.path,
             "x-leakrfc-file": file.name,
             "x-leakrfc-size": str(file.size),
             "x-mimetype": file.mimetype,

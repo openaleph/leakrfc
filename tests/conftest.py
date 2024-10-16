@@ -17,11 +17,14 @@ import botocore.awsrequest
 import botocore.model
 import pytest
 import requests
-from anystore import get_store
 
 from leakrfc.archive import get_dataset
 from leakrfc.archive.dataset import DatasetArchive
 from leakrfc.crawl import crawl
+
+# from anystore import get_store
+# from anystore.mirror import mirror
+
 
 FIXTURES_PATH = (Path(__file__).parent / "fixtures").absolute()
 
@@ -74,10 +77,9 @@ def http_server():
 def setup_s3():
     s3 = boto3.resource("s3", region_name="us-east-1")
     s3.create_bucket(Bucket="leakrfc")
-    from_store = get_store(uri=FIXTURES_PATH / "src", serialization_mode="raw")
-    to_store = get_store(uri="s3://leakrfc", serialization_mode="raw")
-    for key in from_store.iterate_keys():
-        to_store.put(key, from_store.get(key))
+    # from_store = get_store(uri=FIXTURES_PATH / "src", serialization_mode="raw")
+    # to_store = get_store(uri="s3://leakrfc", serialization_mode="raw")
+    # mirror(from_store, to_store)
 
 
 # Mock s3 for fsspec

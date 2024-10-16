@@ -29,9 +29,7 @@ class ExportWorker(DatasetWorker):
 
 
 def export_dataset(dataset: DatasetArchive, uri: Uri) -> None:
-    out = ZipStore(
-        uri=uri, prefix=dataset.name, backend_config={"compression": zipfile.ZIP_LZMA}
-    )
+    out = ZipStore(uri=uri, backend_config={"compression": zipfile.ZIP_LZMA})
     worker = ExportWorker(out, dataset)
     worker.log_info(f"Exporting dataset `{dataset.name}` ...")
     worker.run()

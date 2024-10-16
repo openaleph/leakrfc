@@ -37,18 +37,15 @@ class BaseArchive(ArchiveModel):
             return get_store(**config)
         return get_store(self.uri, **OPTS)
 
-    @cached_property
-    def _meta_storage(self) -> Store:
-        store = self._storage / self.metadata_prefix
-        store.serialization_mode = "auto"
-        return store
-
-    @staticmethod
-    def _join_path(*parts: str) -> str:
-        return "/".join([p.strip("/") for p in parts])
+    def _make_path(self, *parts: str) -> str:
+        return "/".join([p.strip("/") for p in parts if p.strip("/")])
 
 
 class Archive(BaseArchive):
+    """
+    Leakrfc archive that holds one or more datasets as subdirs
+    """
+
     @cached_property
     def cache(self) -> BaseStore:
         if self.cache_config is not None:
@@ -59,9 +56,7 @@ class Archive(BaseArchive):
         from leakrfc.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
 
         config_uri = f"{dataset}/{self.metadata_prefix}/config.yml"
-        config = {
-            "storage_config": (self._storage / dataset).model_dump(),
-        }
+        config = {"storage_config": self._storage.model_dump()}
         if self._storage.exists(config_uri):
             config.update(
                 **self._storage.get(config_uri, deserialization_func=yaml.safe_load)

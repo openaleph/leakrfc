@@ -1,20 +1,20 @@
 from anystore import get_store
 
 from leakrfc.archive import get_dataset
-from leakrfc.sync.memorious import import_memorious, iter_memorious
+from leakrfc.sync.memorious import MemoriousWorker, import_memorious
 
 
 def test_sync_memorious(fixtures_path, tmp_path):
     memorious_uri = fixtures_path / "memorious"
     memorious = get_store(memorious_uri)
-    file = next(iter_memorious(memorious, "memorious"))
+    dataset = get_dataset("memorious", uri=tmp_path / "archive")
+    worker = MemoriousWorker(memorious_uri, dataset)
+    key = next(worker.get_tasks())
+    file = worker.load_memorious(key)
     assert file.name == "Appleby_Gerry_sm.jpg"
-    assert file.key == f"{file.path}/{file.name}"
+    assert file.key == memorious._get_relpath(memorious.get_key(file.key))
     assert file.extra["title"] == "Home - BishopAccountability.org"
     assert file.mimetype == "image/jpeg"
-
-    dataset = get_dataset("memorious", uri=tmp_path / "archive")
-    dataset.archive_file(file.extra.pop("_file_name"), memorious, file)
 
     import_memorious(dataset, fixtures_path / "memorious/")
     archived_file = next(dataset.iter_files())

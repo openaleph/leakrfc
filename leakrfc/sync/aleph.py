@@ -18,7 +18,7 @@ from leakrfc.worker import DatasetWorker
 
 def get_upload_cache_key(self: "AlephUploadWorker", file: OriginalFile) -> str:
     host = urlparse(self.host).netloc
-    return f"aleph/upload/{host}/{file.key}"
+    return f"aleph/upload/{host}/{self.dataset.name}/{file.key}"
 
 
 class AlephUploadWorker(DatasetWorker):
@@ -47,13 +47,14 @@ class AlephUploadWorker(DatasetWorker):
         self.consumer_threads = min(10, self.consumer_threads)  # urllib connection pool
 
     def get_parent(self, key: str, prefix: str | None = None) -> dict[str, str] | None:
-        p = Path(key)
-        if prefix:
-            p = prefix / p
-        parent_path = str(p.parent)
-        if not parent_path or parent_path == ".":
-            return
-        return {"id": aleph.make_folders(parent_path, self.collection_id)}
+        with self.lock:
+            p = Path(key)
+            if prefix:
+                p = prefix / p
+            parent_path = str(p.parent)
+            if not parent_path or parent_path == ".":
+                return
+            return {"id": aleph.make_folders(parent_path, self.collection_id)}
 
     @anycache(key_func=get_upload_cache_key)
     def handle_task(self, task: OriginalFile) -> dict[str, Any]:

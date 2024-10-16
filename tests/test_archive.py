@@ -3,12 +3,17 @@ from pantomime import PLAIN
 
 from leakrfc.archive import get_archive, get_dataset
 from leakrfc.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
+from leakrfc.crawl import crawl
 from tests.conftest import setup_s3
 
 
 def _test_dataset(dataset: DatasetArchive | ReadOnlyDatasetArchive):
     files = [f for f in dataset.iter_files()]
     assert len(files) == 74
+
+    keys = [f for f in dataset.iter_keys()]
+    assert len(keys) == 74
+    assert set(f.key for f in files) == set(keys)
 
     key = "utf.txt"
     content_hash = "5a6acf229ba576d9a40b09292595658bbb74ef56"
@@ -56,12 +61,16 @@ def test_archive_dataset(test_dataset):
 def test_archive_zip_dataset(fixtures_path):
     dataset = get_dataset("test_dataset", uri=fixtures_path / "test_dataset.leakrfc")
     assert _test_dataset(dataset)
-    # assert dataset.store.readonly
-    # assert dataset.readonly
-    # assert isinstance(dataset, ReadOnlyDatasetArchive)
+
+
+# assert dataset.store.readonly
+# assert dataset.readonly
+# assert isinstance(dataset, ReadOnlyDatasetArchive)
 
 
 # @mock_aws
-# def test_archive_s3_dataset():
+# def test_archive_s3_dataset(fixtures_path):
 #     setup_s3()
-#     assert _test_archive_dataset("s3_dataset")
+#     dataset = get_dataset("test_dataset", uri="s3://leakrfc", path_prefix=False)
+#     crawl(fixtures_path / "src", dataset)
+#     assert _test_dataset(dataset)

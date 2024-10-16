@@ -22,5 +22,12 @@ def test_config(fixtures_path, monkeypatch):
 
     dataset = get_dataset("test_dataset")
     assert dataset.name == "test_dataset"
-    assert dataset._storage.uri.startswith(archive._storage.uri)
+    assert dataset._storage.uri == archive._storage.uri
+    assert dataset.path_prefix == dataset.name
+    assert isinstance(dataset.archive.cache, MemoryStore)
+
+    dataset = archive.get_dataset("test_dataset")
+    assert dataset.name == "test_dataset"
+    assert dataset._storage.uri == archive._storage.uri
+    assert dataset.path_prefix == dataset.name
     assert isinstance(dataset.archive.cache, MemoryStore)

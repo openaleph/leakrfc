@@ -1,12 +1,14 @@
 from datetime import datetime
-from typing import Any, BinaryIO, ClassVar, Iterable
+from typing import Any, BinaryIO, ClassVar, Iterable, Literal
 
 import orjson
 from anystore.store.base import BaseStore
 from anystore.store.virtual import get_virtual
-from anystore.types import BytesGenerator
+from anystore.types import BytesGenerator, StrGenerator
+from anystore.util import DEFAULT_HASH_ALGORITHM
 from banal import ensure_dict
 from nomenklatura.entity import CE
+from pydantic import model_validator
 
 from leakrfc.archive.base import Archive, BaseArchive, get_store
 from leakrfc.logging import get_logger
@@ -28,44 +30,79 @@ class ReadOnlyDatasetArchive(BaseArchive):
     readonly: ClassVar = True
     name: str
     archive: Archive
+    path_prefix: str | Literal[False]
+
+    @model_validator(mode="before")
+    def ensure_path_prefix(cls, data: Any) -> Any:
+        """
+        `path_prefix` should be `dataset.name` unless configured or omitted
+        """
+        if not data.get("path_prefix") is False:
+            data["path_prefix"] = data.get("path_prefix") or data["name"]
+        return data
 
     def exists(self, key: str) -> bool:
         path = self._get_file_info_path(key)
-        return self._meta_storage.exists(path)
+        return self._storage.exists(path)
 
     def exists_hash(self, content_hash: str) -> bool:
-        lookup_key = self._join_path(STORE_PREFIX, make_ch_key(content_hash), KEY)
-        key = self._meta_storage.get(lookup_key)
+        lookup_key = self._make_path(
+            self.metadata_prefix,
+            STORE_PREFIX,
+            make_ch_key(content_hash),
+            KEY,
+        )
+        key = self._storage.get(
+            lookup_key, raise_on_nonexist=False, serialization_mode="auto"
+        )
+        if key is None:
+            return False
         return self.exists(key)
+
+    def make_checksum(
+        self, key: str, algorithm: str | None = DEFAULT_HASH_ALGORITHM
+    ) -> str:
+        return self._storage.checksum(self._make_path(key), algorithm)
 
     def lookup_file(self, key: str) -> OriginalFile:
         path = self._get_file_info_path(key)
-        return self._meta_storage.get(path, model=OriginalFile)
+        return self._storage.get(path, model=OriginalFile)
 
     def lookup_file_by_hash(self, content_hash: str) -> OriginalFile:
-        key_path = self._join_path(STORE_PREFIX, make_ch_key(content_hash), KEY)
-        key = self._meta_storage.get(key_path)
+        key_path = self._make_path(
+            self.metadata_prefix, STORE_PREFIX, make_ch_key(content_hash), KEY
+        )
+        key = self._storage.get(key_path, serialization_mode="auto")
         return self.lookup_file(key)
 
     def stream_file(self, file: OriginalFile) -> BytesGenerator:
-        yield from self._storage.stream(file.key)
+        yield from self._storage.stream(self._make_path(file.key))
 
     def open_file(self, file: OriginalFile) -> BinaryIO:
-        return self._storage.open(file.key)
+        return self._storage.open(self._make_path(file.key))
 
     def iter_files(self) -> OriginalFiles:
-        for key in self._meta_storage.iterate_keys(INFO_PREFIX):
-            yield self._meta_storage.get(key, model=OriginalFile)
+        prefix = self._make_path(self.metadata_prefix, INFO_PREFIX)
+        for key in self._storage.iterate_keys(prefix=prefix):
+            yield self._storage.get(key, model=OriginalFile)
 
-    def _get_file_info_path(self, key, with_prefix: bool = False) -> str:
-        path = self._join_path(INFO_PREFIX, key, INFO)
-        if with_prefix:
-            path = self._join_path(self.metadata_prefix, path)
-        return path
+    def iter_keys(self) -> StrGenerator:
+        for key in self._storage.iterate_keys(
+            prefix=self._make_path(),
+            exclude_prefix=self._make_path(self.metadata_prefix),
+        ):
+            if self.path_prefix:
+                key = key[len(self.path_prefix) + 1 :]
+            yield key
+
+    def _get_file_info_path(self, key) -> str:
+        return self._make_path(self.metadata_prefix, INFO_PREFIX, key, INFO)
 
     def _get_file_store_path(self, key: str, *parts: str) -> str:
         file = self.lookup_file(key)
-        return self._join_path(STORE_PREFIX, make_ch_key(file.content_hash), *parts)
+        return self._make_path(
+            self.metadata_prefix, STORE_PREFIX, make_ch_key(file.content_hash), *parts
+        )
 
     def _get_entities_path(
         self, now: bool = False, suffix: str | None = None, with_prefix: bool = False
@@ -75,10 +112,13 @@ class ReadOnlyDatasetArchive(BaseArchive):
             suffix = datetime.now().isoformat()
         if suffix:
             path += f".{suffix}"
-        path = self._join_path(ENTITIES_PREFIX, path)
+        path = self._make_path(ENTITIES_PREFIX, path)
         if with_prefix:
-            path = self._join_path(self.metadata_prefix, path)
+            path = self._make_path(self.metadata_prefix, path)
         return path
+
+    def _make_path(self, *parts: str) -> str:
+        return super()._make_path(self.path_prefix or "", *parts)
 
 
 class DatasetArchive(ReadOnlyDatasetArchive):
@@ -128,8 +168,9 @@ class DatasetArchive(ReadOnlyDatasetArchive):
             )
             file = OriginalFile(**file_data)
             # store actual file
+            file_path = self._make_path(file.key)
             with tmp.store.open(tmp_path) as i:
-                with self._storage.open(file.key, mode="wb") as o:
+                with self._storage.open(file_path, mode="wb") as o:
                     o.write(i.read())
             # store metadata
             self._put_file_info(file)
@@ -145,19 +186,15 @@ class DatasetArchive(ReadOnlyDatasetArchive):
 
     def _put_file_info(self, file: OriginalFile) -> None:
         # store metadata
-        self._meta_storage.put(
-            self._get_file_info_path(file.key), file, model=OriginalFile
-        )
+        self._storage.put(self._get_file_info_path(file.key), file, model=OriginalFile)
         # store hash reverse lookup
-        self._meta_storage.put(
-            self._get_file_store_path(file.key, KEY), file.key.encode()
-        )
+        self._storage.put(self._get_file_store_path(file.key, KEY), file.key.encode())
 
     def add_proxies(self, proxies: Iterable[CE]) -> None:
         path = self._get_entities_path()
         data = b"\n".join([orjson.dumps(p.to_full_dict()) for p in proxies])
-        self._meta_storage.put(path, data)
+        self._storage.put(path, data)
 
     def delete_file(self, key: str) -> None:
-        self._meta_storage.delete(self._get_file_info_path(key), ignore_errors=True)
+        self._storage.delete(self._get_file_info_path(key), ignore_errors=True)
         self._storage.delete(key, ignore_errors=True)

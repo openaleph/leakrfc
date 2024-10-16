@@ -41,11 +41,9 @@ class LeakrfcWorker(DatasetWorker):
 
     def get_tasks(self) -> Generator[Task, None, None]:
         self.log_info("Checking source files ...")
-        for key in self.dataset._storage.iterate_keys(
-            exclude_prefix=self.dataset.metadata_prefix
-        ):
+        for key in self.dataset.iter_keys():
             yield key, ACTION_SOURCE
-        self.log_info("Checking source files ...")
+        self.log_info("Checking existing files ...")
         for file in super().get_tasks():
             yield file.key, ACTION_INFO
 
@@ -70,7 +68,7 @@ class LeakrfcWorker(DatasetWorker):
             if self._get_integrity(key) is None:
                 self.log_info(f"Testing checksum for `{key}` ...")
                 try:
-                    content_hash = self.dataset._storage.checksum(key)
+                    content_hash = self.dataset.make_checksum(key)
                     file = self.dataset.lookup_file(key)
                     if content_hash == file.content_hash:
                         self._set_integrity(key, True)

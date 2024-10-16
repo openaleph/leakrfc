@@ -20,14 +20,14 @@ def configure_archive(**kwargs) -> Archive:
 
 
 @cache
-def get_archive(uri: Uri | None = None) -> Archive:
+def get_archive(uri: Uri | None = None, **kwargs) -> Archive:
     if uri is not None:
         uri = ensure_uri(uri)
         ext = os.path.splitext(uri)[1]
         if ext in (".yml", ".yaml"):
-            return Archive._from_uri(uri)
+            return Archive._from_uri(uri, **kwargs)
         else:
-            return Archive(storage_config=StoreModel(uri=uri))
+            return Archive(storage_config=StoreModel(uri=uri, **kwargs))
     return configure_archive()
 
 
