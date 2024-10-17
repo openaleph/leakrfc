@@ -91,7 +91,9 @@ class AlephUploadWorker(DatasetWorker):
         parent = self.get_parent(task.key, self.prefix)
         if parent:
             metadata["parent"] = parent
-        tmp_key = self.tmp.download(task.key, self.dataset._storage)
+        tmp_key = self.tmp.download(
+            self.dataset._make_path(task.key), self.dataset._storage
+        )
         tmp_path = urlparse(self.tmp.store.get_key(tmp_key)).path
         res.update(
             self.api.ingest_upload(
