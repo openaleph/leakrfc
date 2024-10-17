@@ -27,7 +27,7 @@ def get_archive(uri: Uri | None = None, **kwargs) -> Archive:
         if ext in (".yml", ".yaml"):
             return Archive._from_uri(uri, **kwargs)
         else:
-            return Archive(storage_config=StoreModel(uri=uri, **kwargs))
+            return Archive(storage=StoreModel(uri=uri, **kwargs))
     return configure_archive()
 
 

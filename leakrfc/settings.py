@@ -1,6 +1,7 @@
 from typing import Optional
 
 from anystore.io import smart_read
+from anystore.model import StoreModel
 from pydantic import BaseModel, HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -29,6 +30,7 @@ class ArchiveSettings(BaseSettings):
 
     uri: str | None = None
     archive: ArchiveModel | None = None
+    cache: StoreModel | None = None
 
 
 class ApiContactSettings(BaseModel):

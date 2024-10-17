@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 from anystore import anycache
 from anystore.store.virtual import get_virtual
 
+from leakrfc.archive.cache import get_cache
 from leakrfc.archive.dataset import DatasetArchive
 from leakrfc.connectors import aleph
 from leakrfc.model import OriginalFile
@@ -22,17 +23,19 @@ def _make_cache_key(self: "AlephUploadWorker", *parts: str) -> str:
     return base + "/".join(parts)
 
 
-def get_upload_cache_key(self: "AlephUploadWorker", file: OriginalFile) -> str:
-    return _make_cache_key(self, file.key)
+def get_upload_cache_key(self: "AlephUploadWorker", file: OriginalFile) -> str | None:
+    if self.use_cache:
+        return _make_cache_key(self, file.key)
 
 
 def get_parent_cache_key(
     self: "AlephUploadWorker", key: str, prefix: str | None = None
-) -> str:
-    parts = [key]
-    if prefix:
-        parts += prefix
-    return _make_cache_key(self, *parts)
+) -> str | None:
+    if self.use_cache:
+        parts = [str(Path(key).parent)]
+        if prefix:
+            parts += prefix
+        return _make_cache_key(self, *parts)
 
 
 class AlephUploadWorker(DatasetWorker):
@@ -60,7 +63,7 @@ class AlephUploadWorker(DatasetWorker):
         self.prefix = prefix
         self.consumer_threads = min(10, self.consumer_threads)  # urllib connection pool
 
-    @anycache(key_func=get_parent_cache_key)
+    @anycache(store=get_cache(), key_func=get_parent_cache_key)
     def get_parent(self, key: str, prefix: str | None = None) -> dict[str, str] | None:
         with self.lock:
             p = Path(key)
@@ -71,7 +74,7 @@ class AlephUploadWorker(DatasetWorker):
                 return
             return {"id": aleph.make_folders(parent_path, self.collection_id)}
 
-    @anycache(key_func=get_upload_cache_key)
+    @anycache(store=get_cache(), key_func=get_upload_cache_key)
     def handle_task(self, task: OriginalFile) -> dict[str, Any]:
         res = {
             "uploaded_at": datetime.now().isoformat(),

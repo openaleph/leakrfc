@@ -7,8 +7,9 @@ from pydantic import BaseModel
 
 from leakrfc import __version__
 from leakrfc.archive import archive
+from leakrfc.archive.cache import get_cache
 from leakrfc.logging import get_logger
-from leakrfc.model import File, default_cache
+from leakrfc.model import File
 from leakrfc.settings import Settings
 
 settings = Settings()
@@ -61,7 +62,7 @@ class Errors:
                 raise exc
 
 
-@anycache(store=default_cache, key_func=lambda d, k: f"api/file/{d}/{k}", model=File)
+@anycache(store=get_cache(), key_func=lambda d, k: f"api/file/{d}/{k}", model=File)
 def get_file_info(dataset: str, key: str) -> File | None:
     storage = archive.get_dataset(dataset)
     return storage.lookup_file_by_hash(key)

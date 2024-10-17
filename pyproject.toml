@@ -59,4 +59,10 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-env = ["DEBUG=1", "LEAKRFC_URI=tests/fixtures/archive.yml"]
+env = [
+    "DEBUG=1",
+    "LEAKRFC_URI=tests/fixtures/archive.yml",
+    "AWS_SECRET_ACCESS_KEY=leakrfc",
+    "AWS_ACCESS_KEY_ID=leakrfc",
+    "FSSPEC_S3_ENDPOINT_URL=''",
+]

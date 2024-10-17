@@ -3,7 +3,7 @@ from typing import Any, ClassVar, Generator, Self, TypeAlias
 
 from anystore.mixins import BaseModel
 from anystore.model import StoreModel
-from anystore.store import get_store, get_store_for_uri
+from anystore.store import get_store_for_uri
 from anystore.store.base import Stats
 from anystore.types import Uri
 from anystore.util import make_data_checksum
@@ -25,9 +25,7 @@ class ArchiveModel(BaseModel):
     metadata_prefix: str = ".leakrfc"
     public_url: str | None = None
     checksum_algorithm: str = "sha1"
-
-    storage_config: StoreModel | None = None
-    cache_config: StoreModel | None = None
+    storage: StoreModel | None = None
 
 
 class File(Stats):
@@ -98,6 +96,3 @@ class ConvertedFile(File):
 
 OriginalFiles: TypeAlias = Generator[OriginalFile, None, None]
 Files: TypeAlias = Generator[File, None, None]
-
-
-default_cache = get_store(uri="memory:///", prefix="leakrfc")
