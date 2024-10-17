@@ -1,7 +1,14 @@
 from anystore import get_store
 
 from leakrfc.archive import get_dataset
-from leakrfc.sync.memorious import MemoriousWorker, import_memorious
+from leakrfc.sync.memorious import (
+    MemoriousWorker,
+    get_file_key,
+    get_file_name,
+    get_file_name_strip_func,
+    get_file_name_templ_func,
+    import_memorious,
+)
 
 
 def test_sync_memorious(fixtures_path, tmp_path):
@@ -34,3 +41,23 @@ def test_sync_memorious(fixtures_path, tmp_path):
     key = next(worker.get_tasks())
     file = worker.load_memorious(key)
     assert file.name == file.key == file.extra["_file_name"]
+
+    # key funcs
+    data = {
+        "url": "https://www.asktheeu.org/en/request/14928/response/55317/attach/5/Communication%20from%20the%20Commission%20SG%202009%20D%2051604.pdf?cookie_passthrough=1",
+        "headers": {
+            "Server": "nginx",
+        },
+    }
+    assert (
+        get_file_key(data)
+        == "en/request/14928/response/55317/attach/5/Communication from the Commission SG 2009 D 51604.pdf"
+    )
+    assert (
+        get_file_name(data) == "Communication from the Commission SG 2009 D 51604.pdf"
+    )
+    assert (
+        get_file_name_strip_func("en/request")(data)
+        == "14928/response/55317/attach/5/Communication from the Commission SG 2009 D 51604.pdf"
+    )
+    assert get_file_name_templ_func("{{ headers.Server }}.pdf")(data) == "nginx.pdf"

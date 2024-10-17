@@ -18,7 +18,12 @@ from leakrfc.logging import configure_logging
 from leakrfc.make import make_dataset
 from leakrfc.settings import ArchiveSettings, Settings
 from leakrfc.sync.aleph import sync_to_aleph
-from leakrfc.sync.memorious import import_memorious
+from leakrfc.sync.memorious import (
+    get_file_name,
+    get_file_name_strip_func,
+    get_file_name_templ_func,
+    import_memorious,
+)
 
 settings = Settings()
 archive_settings = ArchiveSettings()
@@ -182,12 +187,31 @@ def cli_export(out: str):
 
 
 @sync.command("memorious")
-def cli_sync_memorious(uri: Annotated[str, typer.Option("-i")]):
+def cli_sync_memorious(
+    uri: Annotated[str, typer.Option("-i")],
+    name_only: Annotated[
+        Optional[bool], typer.Option(help="Use only file name as key")
+    ] = False,
+    strip_prefix: Annotated[
+        Optional[str], typer.Option(help="Strip from file key prefix")
+    ] = None,
+    key_template: Annotated[
+        Optional[str], typer.Option(help="Template to generate key")
+    ] = None,
+):
     """
     Sync a memorious data store into a leakrfc dataset
     """
     with Dataset() as dataset:
-        import_memorious(dataset, uri)
+        if name_only:
+            key_func = get_file_name
+        elif strip_prefix:
+            key_func = get_file_name_strip_func(strip_prefix)
+        elif key_template:
+            key_func = get_file_name_templ_func(key_template)
+        else:
+            key_func = None
+        import_memorious(dataset, uri, key_func)
 
 
 @sync.command("aleph")

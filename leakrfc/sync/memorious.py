@@ -10,7 +10,7 @@ memorious format:
 
 from pathlib import Path
 from typing import Any, Callable
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from anystore import anycache
 from anystore.store import get_store
@@ -21,6 +21,7 @@ from leakrfc.archive import DatasetArchive
 from leakrfc.archive.cache import get_cache
 from leakrfc.logging import get_logger
 from leakrfc.model import OriginalFile
+from leakrfc.util import render
 from leakrfc.worker import DatasetWorker
 
 log = get_logger(__name__)
@@ -33,10 +34,6 @@ def make_cache_key(self: "MemoriousWorker", key: str) -> str | None:
     if host is None:
         host = make_data_checksum(str(self.memorious.uri))
     return f"memorious/sync/{host}/{self.dataset.name}/{key}"
-
-
-def get_file_key(data: dict[str, Any]) -> str:
-    return urlparse(data["url"]).path
 
 
 class MemoriousWorker(DatasetWorker):
@@ -96,3 +93,25 @@ def import_memorious(
     worker = MemoriousWorker(uri, key_func, dataset=dataset)
     worker.log_info(f"Starting memorious import from `{worker.memorious.uri}` ...")
     worker.run()
+
+
+def get_file_key(data: dict[str, Any]) -> str:
+    return unquote(urlparse(data["url"]).path).strip("/")
+
+
+def get_file_name(data: dict[str, Any]) -> str:
+    return unquote(Path(urlparse(data["url"]).path).name)
+
+
+def get_file_name_templ_func(tmpl: str) -> Callable:
+    def _func(data: dict[str, Any]) -> str:
+        return render(tmpl, data)
+
+    return _func
+
+
+def get_file_name_strip_func(strip_prefix: str) -> Callable:
+    def _func(data: dict[str, Any]) -> str:
+        return get_file_key(data)[len(strip_prefix) :].strip("/")
+
+    return _func
