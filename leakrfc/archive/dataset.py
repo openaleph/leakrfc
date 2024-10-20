@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, BinaryIO, ClassVar, Iterable, Literal
+from typing import Any, BinaryIO, ClassVar, Iterable
 
 import orjson
 from anystore.store.base import BaseStore
@@ -8,9 +8,8 @@ from anystore.types import BytesGenerator, StrGenerator
 from anystore.util import DEFAULT_HASH_ALGORITHM
 from banal import ensure_dict
 from nomenklatura.entity import CE
-from pydantic import model_validator
 
-from leakrfc.archive.base import Archive, BaseArchive, get_store
+from leakrfc.archive.base import BaseArchive, get_store
 from leakrfc.logging import get_logger
 from leakrfc.model import OriginalFile, OriginalFiles
 from leakrfc.util import make_ch_key
@@ -29,17 +28,6 @@ ENTITIES = "entities.ftm.json"
 class ReadOnlyDatasetArchive(BaseArchive):
     readonly: ClassVar = True
     name: str
-    archive: Archive
-    path_prefix: str | Literal[False]
-
-    @model_validator(mode="before")
-    def ensure_path_prefix(cls, data: Any) -> Any:
-        """
-        `path_prefix` should be `dataset.name` unless configured or omitted
-        """
-        if not data.get("path_prefix") is False:
-            data["path_prefix"] = data.get("path_prefix") or data["name"]
-        return data
 
     def exists(self, key: str) -> bool:
         path = self._get_file_info_path(key)
@@ -91,8 +79,8 @@ class ReadOnlyDatasetArchive(BaseArchive):
             prefix=self._make_path(),
             exclude_prefix=self._make_path(self.metadata_prefix),
         ):
-            if self.path_prefix:
-                key = key[len(self.path_prefix) + 1 :]
+            if self.is_zip:
+                key = key[len(self.name) + 1 :]
             yield key
 
     def _get_file_info_path(self, key) -> str:
@@ -118,7 +106,9 @@ class ReadOnlyDatasetArchive(BaseArchive):
         return path
 
     def _make_path(self, *parts: str) -> str:
-        return super()._make_path(self.path_prefix or "", *parts)
+        if self.is_zip:
+            parts = tuple([self.name, *parts])
+        return super()._make_path(*parts)
 
 
 class DatasetArchive(ReadOnlyDatasetArchive):

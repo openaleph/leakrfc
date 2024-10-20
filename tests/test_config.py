@@ -21,10 +21,16 @@ def test_config(fixtures_path, monkeypatch):
 
     dataset = get_dataset("test_dataset")
     assert dataset.name == "test_dataset"
-    assert dataset._storage.uri == archive._storage.uri
-    assert dataset.path_prefix == dataset.name
+    assert dataset._storage.uri == f"{archive._storage.uri}/test_dataset"
 
     dataset = archive.get_dataset("test_dataset")
     assert dataset.name == "test_dataset"
+    assert dataset._storage.uri == f"{archive._storage.uri}/test_dataset"
+
+    dataset = get_dataset("test_dataset", uri="foo")
+    assert dataset._storage.uri.endswith("foo")
+
+    archive = get_archive("foo.leakrfc")
+    dataset = archive.get_dataset("test")
     assert dataset._storage.uri == archive._storage.uri
-    assert dataset.path_prefix == dataset.name
+    assert dataset._make_path() == "test"

@@ -30,6 +30,14 @@ class DatasetWorker(Worker):
         }
         log.info(msg, **ctx)
 
+    def log_warning(self, msg: str, **ctx) -> None:
+        ctx = {
+            "dataset": self.dataset.name,
+            "storage": self.dataset._storage.uri,
+            **ctx,
+        }
+        log.warning(msg, **ctx)
+
     def log_error(self, msg: str, **ctx) -> None:
         ctx = {
             "dataset": self.dataset.name,

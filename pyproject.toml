@@ -59,11 +59,9 @@ httpx = "^0.27.2"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.pytest.ini_options]
-env = [
-    "DEBUG=1",
-    "LEAKRFC_URI=tests/fixtures/archive.yml",
-    "AWS_SECRET_ACCESS_KEY=leakrfc",
-    "AWS_ACCESS_KEY_ID=leakrfc",
-    "FSSPEC_S3_ENDPOINT_URL=''",
-]
+[tool.pytest_env]
+LEAKRFC_URI = "tests/fixtures/archive.yml"
+AWS_SECRET_ACCESS_KEY = "leakrfc"
+AWS_ACCESS_KEY_ID = "leakrfc"
+DEBUG = 1
+FSSPEC_S3_ENDPOINT_URL = ''

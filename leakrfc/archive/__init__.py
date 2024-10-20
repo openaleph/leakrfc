@@ -33,9 +33,11 @@ def get_archive(uri: Uri | None = None, **kwargs) -> Archive:
 
 @cache
 def get_dataset(
-    dataset: str, **archive_kwargs
+    dataset: str, uri: Uri | None = None, **kwargs
 ) -> DatasetArchive | ReadOnlyDatasetArchive:
-    archive = get_archive(**archive_kwargs)
+    if uri is not None:
+        return DatasetArchive(name=dataset, uri=str(uri), **kwargs)
+    archive = get_archive(**kwargs)
     return archive.get_dataset(dataset)
 
 

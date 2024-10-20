@@ -104,12 +104,21 @@ def cli_config():
 
 
 @cli.command("make")
-def cli_make(out_uri: Annotated[str, typer.Option("-o")] = "-"):
+def cli_make(
+    out_uri: Annotated[str, typer.Option("-o")] = "-",
+    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
+    check_integrity: Annotated[
+        Optional[bool], typer.Option(help="Check checksums")
+    ] = True,
+    cleanup: Annotated[
+        Optional[bool], typer.Option(help="Cleanup (delete) unreferenced metadata")
+    ] = True,
+):
     """
     Make or update a leakrfc dataset and check integrity
     """
     with Dataset() as dataset:
-        res = make_dataset(dataset)
+        res = make_dataset(dataset, use_cache, check_integrity, cleanup)
         write_obj(res, out_uri)
 
 
@@ -174,7 +183,7 @@ def cli_export(out: str):
     Export a complete dataset in LeakRFC format
     """
     with Dataset() as dataset:
-        export_dataset(dataset, out)
+        write_obj(export_dataset(dataset, out), "-")
 
 
 # @cli.command("ingest")

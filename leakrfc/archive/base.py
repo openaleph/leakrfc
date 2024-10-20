@@ -12,7 +12,7 @@ from leakrfc.logging import get_logger
 from leakrfc.model import ArchiveModel
 
 if TYPE_CHECKING:
-    from leakrfc.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
+    from leakrfc.archive.dataset import DatasetArchive
 
 
 log = get_logger(__name__)
@@ -36,6 +36,10 @@ class BaseArchive(ArchiveModel):
             return get_store(**config)
         return get_store(uri=self.uri, **OPTS)
 
+    @cached_property
+    def is_zip(self) -> bool:
+        return isinstance(self._storage, ZipStore)
+
     def _make_path(self, *parts: str) -> str:
         return "/".join([p.strip("/") for p in parts if p.strip("/")])
 
@@ -45,24 +49,22 @@ class Archive(BaseArchive):
     Leakrfc archive that holds one or more datasets as subdirs
     """
 
-    def get_dataset(self, dataset: str) -> "DatasetArchive | ReadOnlyDatasetArchive":
-        from leakrfc.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
+    def get_dataset(self, dataset: str) -> "DatasetArchive":
+        from leakrfc.archive.dataset import DatasetArchive
 
         config_uri = f"{dataset}/{self.metadata_prefix}/config.yml"
-        config = {"storage": self._storage.model_dump()}
+        config = {}
         if self._storage.exists(config_uri):
-            config.update(
-                **self._storage.get(config_uri, deserialization_func=yaml.safe_load)
-            )
+            config = self._storage.get(config_uri, deserialization_func=yaml.safe_load)
+        if "storage" not in config:
+            storage = self._storage.model_dump()
+            if not self.is_zip:
+                storage["uri"] = self._make_path(self._storage.uri, dataset)
+            config.update(storage=storage)
         config["name"] = dataset
-        config["archive"] = self
-        if config["storage"].get("readonly"):
-            return ReadOnlyDatasetArchive(**config)
         return DatasetArchive(**config)
 
-    def get_datasets(
-        self,
-    ) -> Generator["DatasetArchive | ReadOnlyDatasetArchive", None, None]:
+    def get_datasets(self) -> Generator["DatasetArchive", None, None]:
         fs, _ = fsspec.url_to_fs(str(self._storage.uri))
         for child in fs.ls(self._storage.uri):
             dataset = Path(child).name
