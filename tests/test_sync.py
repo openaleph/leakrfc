@@ -23,7 +23,9 @@ def test_sync_memorious(fixtures_path, tmp_path):
     assert file.extra["title"] == "Home - BishopAccountability.org"
     assert file.mimetype == "image/jpeg"
 
-    import_memorious(dataset, fixtures_path / "memorious/")
+    res = import_memorious(dataset, fixtures_path / "memorious/")
+    assert res.added == 1
+    assert res.skipped == 0
     archived_file = next(dataset.iter_files())
     assert archived_file.name == file.name
     assert archived_file.key == file.key
@@ -31,7 +33,9 @@ def test_sync_memorious(fixtures_path, tmp_path):
     assert dataset.exists_hash(file.content_hash)
 
     # now cached
-    import_memorious(dataset, fixtures_path / "memorious/")
+    res = import_memorious(dataset, fixtures_path / "memorious/")
+    assert res.added == 0
+    assert res.skipped == 1
 
     # custom file key (path) method
     def get_key(data):

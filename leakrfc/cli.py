@@ -220,7 +220,8 @@ def cli_sync_memorious(
             key_func = get_file_name_templ_func(key_template)
         else:
             key_func = None
-        import_memorious(dataset, uri, key_func)
+        res = import_memorious(dataset, uri, key_func)
+        write_obj(res, "-")
 
 
 @sync.command("aleph")
