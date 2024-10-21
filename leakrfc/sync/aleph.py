@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 from anystore import anycache
 from anystore.store.virtual import get_virtual
+from anystore.worker import WorkerStatus
 
 from leakrfc.archive.cache import get_cache
 from leakrfc.archive.dataset import DatasetArchive
@@ -36,6 +37,11 @@ def get_parent_cache_key(
         if prefix:
             parts += prefix
         return _make_cache_key(self, *parts)
+
+
+class AlephUploadStatus(WorkerStatus):
+    added: int = 0
+    folders_created: int = 0
 
 
 class AlephUploadWorker(DatasetWorker):
@@ -72,7 +78,9 @@ class AlephUploadWorker(DatasetWorker):
             parent_path = str(p.parent)
             if not parent_path or parent_path == ".":
                 return
-            return {"id": aleph.make_folders(parent_path, self.collection_id)}
+            parent = {"id": aleph.make_folders(parent_path, self.collection_id)}
+            self.count(folders_created=1)
+            return parent
 
     @anycache(store=get_cache(), key_func=get_upload_cache_key)
     def handle_task(self, task: OriginalFile) -> dict[str, Any]:
@@ -108,6 +116,7 @@ class AlephUploadWorker(DatasetWorker):
             file=task.key,
             foreign_id=self.foreign_id,
         )
+        self.count(uploaded=1)
         return res
 
     def done(self) -> None:
@@ -122,7 +131,7 @@ def sync_to_aleph(
     prefix: str | None = None,
     foreign_id: str | None = None,
     use_cache: bool | None = True,
-) -> None:
+) -> AlephUploadStatus:
     worker = AlephUploadWorker(
         dataset=dataset,
         host=host,
@@ -132,4 +141,4 @@ def sync_to_aleph(
         use_cache=use_cache,
     )
     worker.log_info(f"Starting sync to Aleph `{worker.host}` ...")
-    worker.run()
+    return worker.run()

@@ -239,7 +239,7 @@ def cli_sync_aleph(
     Sync a leakrfc dataset to Aleph
     """
     with Dataset() as dataset:
-        sync_to_aleph(
+        res = sync_to_aleph(
             dataset=dataset,
             host=host,
             api_key=api_key,
@@ -247,3 +247,4 @@ def cli_sync_aleph(
             foreign_id=foreign_id,
             use_cache=use_cache,
         )
+        write_obj(res, "-")
