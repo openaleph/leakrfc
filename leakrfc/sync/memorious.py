@@ -99,9 +99,12 @@ class MemoriousWorker(DatasetWorker):
 
 
 def import_memorious(
-    dataset: DatasetArchive, uri: Uri, key_func: Callable | None = None
+    dataset: DatasetArchive,
+    uri: Uri,
+    key_func: Callable | None = None,
+    use_cache: bool | None = True,
 ) -> MemoriousStatus:
-    worker = MemoriousWorker(uri, key_func, dataset=dataset)
+    worker = MemoriousWorker(uri, key_func, dataset=dataset, use_cache=use_cache)
     worker.log_info(f"Starting memorious import from `{worker.memorious.uri}` ...")
     return worker.run()
 

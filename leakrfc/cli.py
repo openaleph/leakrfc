@@ -198,6 +198,7 @@ def cli_export(out: str):
 @sync.command("memorious")
 def cli_sync_memorious(
     uri: Annotated[str, typer.Option("-i")],
+    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
     name_only: Annotated[
         Optional[bool], typer.Option(help="Use only file name as key")
     ] = False,
@@ -220,12 +221,13 @@ def cli_sync_memorious(
             key_func = get_file_name_templ_func(key_template)
         else:
             key_func = None
-        res = import_memorious(dataset, uri, key_func)
+        res = import_memorious(dataset, uri, key_func, use_cache=use_cache)
         write_obj(res, "-")
 
 
 @sync.command("aleph")
 def cli_sync_aleph(
+    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
     host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
     api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
     folder: Annotated[Optional[str], typer.Option(help="Base folder path")] = None,
@@ -243,4 +245,5 @@ def cli_sync_aleph(
             api_key=api_key,
             prefix=folder,
             foreign_id=foreign_id,
+            use_cache=use_cache,
         )

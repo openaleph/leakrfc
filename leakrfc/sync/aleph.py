@@ -121,6 +121,7 @@ def sync_to_aleph(
     api_key: str | None,
     prefix: str | None = None,
     foreign_id: str | None = None,
+    use_cache: bool | None = True,
 ) -> None:
     worker = AlephUploadWorker(
         dataset=dataset,
@@ -128,6 +129,7 @@ def sync_to_aleph(
         api_key=api_key,
         prefix=prefix,
         foreign_id=foreign_id,
+        use_cache=use_cache,
     )
     worker.log_info(f"Starting sync to Aleph `{worker.host}` ...")
     worker.run()
