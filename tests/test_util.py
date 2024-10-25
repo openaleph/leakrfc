@@ -9,10 +9,10 @@ def test_util(fixtures_path):
 
     assert util.make_checksum(fixtures_path / "src" / "utf.txt") == ch
 
-    assert util.make_ch_key(ch) == f"5a/6a/{ch}"
-    assert util.make_ch_key("abcd") == "ab/cd/abcd"
+    assert util.make_ch_key(ch) == f"5a/6a/cf/{ch}"
+    assert util.make_ch_key("abcdef") == "ab/cd/ef/abcdef"
     with pytest.raises(ValueError):
-        util.make_ch_key("abc")
+        util.make_ch_key("abcde")
 
     assert util.guess_mimetype("foo.pdf") == "application/pdf"
     assert util.guess_mimetype("application/pdf") == "application/pdf"
