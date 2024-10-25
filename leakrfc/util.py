@@ -14,9 +14,9 @@ def make_checksum(uri: Uri, algorithm: str | None = "sha1") -> str:
 
 
 def make_ch_key(ch: str) -> str:
-    if len(ch) < 4:
+    if len(ch) < 6:
         raise ValueError(f"Invalid checksum: `{ch}`")
-    return "/".join((ch[:2], ch[2:4], ch))
+    return "/".join((ch[:2], ch[2:4], ch[4:6], ch))
 
 
 def guess_mimetype(value: Any) -> str | None:

@@ -100,6 +100,7 @@ def cli_config():
         dataset = STATE["dataset"]
         write_obj(settings, "-")
         write_obj(archive, "-")
+        write_obj(archive_settings.cache, "-")
         write_obj(dataset, "-")
 
 

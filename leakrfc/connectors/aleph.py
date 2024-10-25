@@ -59,7 +59,7 @@ def get_or_create_collection_id(foreign_id: str, api: AlephAPI | None = None) ->
 @cache
 def make_folders(path: str, collection_id: str, parent: str | None = None) -> str:
     api = get_api()
-    print(f"Creating folder: `{path}`")
+    log.info(f"Creating folder: `{path}`", host=get_host(api))
     folder = Path(path)
     foreign_id = "/".join(folder.parts)
     if len(folder.parts) > 1:
