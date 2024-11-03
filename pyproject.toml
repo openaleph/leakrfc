@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "leakrfc"
-version = "0.0.0"
+version = "0.0.00"
 description = "Data standard, storage and retrieval for leaks and document collections"
 authors = ["Simon Wörpel <simon.woerpel@pm.me>"]
 license = "AGPLv3+"
