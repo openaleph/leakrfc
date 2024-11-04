@@ -170,12 +170,16 @@ def cli_ls(
 
 
 @cli.command("crawl")
-def cli_crawl(uri: str):
+def cli_crawl(
+    uri: str,
+    out_uri: Annotated[str, typer.Option("-o")] = "-",
+    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
+):
     """
     Crawl documents from local or remote sources
     """
     with Dataset() as dataset:
-        crawl(uri, dataset)
+        write_obj(crawl(uri, dataset, use_cache=use_cache), out_uri)
 
 
 @cli.command("export")

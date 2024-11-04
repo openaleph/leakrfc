@@ -16,7 +16,7 @@ def get_cache() -> BaseStore:
     if settings.cache is not None:
         return get_store(**settings.cache.model_dump())
     log.warning(
-        "Using in-memory cache. This is not for production use! "
-        "Configure via env `LEAKRFC_CACHE__*`"
+        "Using in-memory cache. Consider configuring properly via env "
+        "`LEAKRFC_CACHE__*` for persistent production use."
     )
     return get_store("memory:///")

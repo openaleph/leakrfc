@@ -7,6 +7,7 @@ from typing import Generator
 from anystore import get_store
 from anystore.store import BaseStore
 from anystore.types import Uri
+from anystore.worker import WorkerStatus
 
 from leakrfc.archive import DatasetArchive
 from leakrfc.logging import get_logger
@@ -32,7 +33,11 @@ class CrawlWorker(DatasetWorker):
         self.log_info(f"Crawling `{self.remote.uri}`: Done.")
 
 
-def crawl(uri: Uri, storage: DatasetArchive) -> None:
+def crawl(
+    uri: Uri,
+    storage: DatasetArchive,
+    use_cache: bool | None = True,
+) -> WorkerStatus:
     remote_store = get_store(uri=uri, serialization_mode="raw")
-    worker = CrawlWorker(remote_store, dataset=storage)
-    worker.run()
+    worker = CrawlWorker(remote_store, dataset=storage, use_cache=use_cache)
+    return worker.run()
