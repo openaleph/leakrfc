@@ -79,8 +79,9 @@ class AlephUploadWorker(DatasetWorker):
             if not parent_path or parent_path == ".":
                 return
             parent = {"id": aleph.make_folders(parent_path, self.collection_id)}
-            self.count(folders_created=1)
-            return parent
+
+        self.count(folders_created=1)
+        return parent
 
     @anycache(store=get_cache(), key_func=get_upload_cache_key)
     def handle_task(self, task: OriginalFile) -> dict[str, Any]:
