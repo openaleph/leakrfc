@@ -114,7 +114,9 @@ annotated-types==0.7.0 ; python_version >= "3.11" and python_version < "4" \
 anyio==4.6.2.post1 ; python_version >= "3.11" and python_version < "4" \
     --hash=sha256:4c8bc31ccdb51c7f7bd251f51c609e038d63e34219b44aa86e47576389880b4c \
     --hash=sha256:6d170c36fba3bdd840c73d3868c1e777e33676a69c3a72cf0a0d5d6d8009b61d
-anystore @ git+https://github.com/investigativedata/anystore.git@31d50a3af6da6fb42c443986dbf6b137f9aa6f0b ; python_version >= "3.11" and python_version < "4"
+anystore==0.1.13 ; python_version >= "3.11" and python_version < "4" \
+    --hash=sha256:ab98e6a720ce0c9982abad5da4e39667332a3a93d23eec0164b4b37962acf88c \
+    --hash=sha256:d5ed82fa4143ab696f7eda39d7b3d131d797e197ea0b609597f5c16bf2ea9731
 asyncssh==2.18.0 ; python_version >= "3.11" and python_version < "4" \
     --hash=sha256:1a322161c01f60b9719dc8f39f80db71e61f3f5e04abbc3420ce503126d87123 \
     --hash=sha256:ee09081200753eca137c893995ce3b95f8e157945aa8bda455ea810b30762d96
