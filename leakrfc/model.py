@@ -1,4 +1,6 @@
+import csv
 from datetime import datetime
+from io import StringIO
 from typing import Any, ClassVar, Generator, Self, TypeAlias
 
 from anystore.mixins import BaseModel
@@ -49,6 +51,9 @@ class File(Stats):
         proxy.add("mimeType", self.mimetype)
         return proxy
 
+    def to_document(self) -> "Document":
+        return Document.from_file(self)
+
     @property
     def id(self) -> str:
         return (
@@ -92,6 +97,45 @@ class ExtractedFile(File):
 class ConvertedFile(File):
     origin: ClassVar = ORIGIN_CONVERTED
     root: str
+
+
+class Document(BaseModel):
+    dataset: str
+    key: str
+    content_hash: str
+    size: int
+    mimetype: str
+    created_at: datetime
+    updated_at: datetime
+
+    def to_csv(self) -> str:
+        io = StringIO()
+        writer = csv.writer(io)
+        writer.writerow(
+            (
+                self.key,
+                self.content_hash,
+                self.size,
+                self.mimetype,
+                self.created_at.isoformat(),
+                self.updated_at.isoformat(),
+            )
+        )
+        return io.getvalue().strip()
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def ensure_created_at(cls, v: Any):
+        return v or datetime.now()
+
+    @field_validator("updated_at", mode="before")
+    @classmethod
+    def ensure_updated_at(cls, v: Any):
+        return v or datetime.now()
+
+    @classmethod
+    def from_file(cls, file: File) -> Self:
+        return cls(**file.model_dump())
 
 
 OriginalFiles: TypeAlias = Generator[OriginalFile, None, None]

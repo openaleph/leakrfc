@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from nomenklatura.dataset import DefaultDataset
 from pantomime.types import PLAIN
 
@@ -11,7 +13,7 @@ from leakrfc.model import (
 )
 
 
-def test_model_file(fixtures_path):
+def test_model():
     uri = "http://localhost:8000/src/utf.txt"
     file_id = "default-file-2928064cd9a743af30b720634dcffacdd84de23d"
 
@@ -45,3 +47,14 @@ def test_model_file(fixtures_path):
     assert converted.root == file_id
     data = converted.model_dump()
     assert data["origin"] == ORIGIN_CONVERTED
+
+    doc = file.to_document()
+    assert doc.key == file.key
+    assert doc.content_hash == file.content_hash
+    assert doc.size == file.size
+    assert doc.mimetype == PLAIN
+    assert doc.dataset == file.dataset
+    assert doc.created_at < datetime.now()
+    assert doc.updated_at < datetime.now()
+    assert doc.created_at < doc.updated_at
+    assert doc.to_csv().startswith("utf.txt,ch-root,19,text/plain")
