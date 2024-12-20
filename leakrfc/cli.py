@@ -12,8 +12,6 @@ from leakrfc.archive.dataset import DatasetArchive
 from leakrfc.crawl import crawl
 from leakrfc.exceptions import ImproperlyConfigured
 from leakrfc.export import export_dataset
-
-# from leakrfc.ingest import ingest_dataset
 from leakrfc.logging import configure_logging
 from leakrfc.make import make_dataset
 from leakrfc.settings import ArchiveSettings, Settings
@@ -189,15 +187,6 @@ def cli_export(out: str):
     """
     with Dataset() as dataset:
         write_obj(export_dataset(dataset, out), "-")
-
-
-# @cli.command("ingest")
-# def cli_ingest():
-#     """
-#     (Re-)ingest dataset
-#     """
-#     with Dataset() as dataset:
-#         ingest_dataset(dataset)
 
 
 @sync.command("memorious")
