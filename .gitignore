@@ -1,3 +1,6 @@
+_wip
+archive/*
+.anystore/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -42,6 +45,7 @@ htmlcov/
 .nox/
 .coverage
 .coverage.*
+coverage.lcov
 .cache
 nosetests.xml
 coverage.xml

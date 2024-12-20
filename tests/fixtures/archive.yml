@@ -1,0 +1,3 @@
+name: leakrfc-archive
+storage:
+  uri: ./tests/fixtures/archive
