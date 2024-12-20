@@ -1,16 +1,8 @@
 import mimetypes
 from typing import Any
 
-from anystore.io import smart_open
-from anystore.types import Uri
-from anystore.util import make_checksum as _make_checksum
 from jinja2 import Template
 from pantomime import DEFAULT, normalize_mimetype
-
-
-def make_checksum(uri: Uri, algorithm: str | None = "sha1") -> str:
-    with smart_open(str(uri)) as io:
-        return _make_checksum(io, algorithm)
 
 
 def make_ch_key(ch: str) -> str:
