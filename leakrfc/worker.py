@@ -1,10 +1,17 @@
-from typing import Any
+import contextlib
+from typing import TYPE_CHECKING, Any
 
+from anystore.store import BaseStore, get_store_for_uri
+from anystore.store.virtual import get_virtual
 from anystore.worker import Worker
 
-from leakrfc.archive.dataset import DatasetArchive
 from leakrfc.logging import get_logger
+from leakrfc.model import OriginalFile
 from leakrfc.settings import Settings
+
+if TYPE_CHECKING:
+    from leakrfc.archive.dataset import DatasetArchive
+
 
 log = get_logger(__name__)
 
@@ -13,7 +20,7 @@ settings = Settings()
 
 class DatasetWorker(Worker):
     def __init__(
-        self, dataset: DatasetArchive, use_cache: bool | None = True, *args, **kwargs
+        self, dataset: "DatasetArchive", use_cache: bool | None = True, *args, **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
         self.dataset = dataset
@@ -53,3 +60,33 @@ class DatasetWorker(Worker):
         )
         if settings.debug:
             raise e
+
+    @contextlib.contextmanager
+    def local_file(self, uri: str, store: BaseStore | None):
+        """
+        Get a `OriginalFile` instance pointing to a file in the local
+        filesystem.
+
+        If the source is local as well, use the actual file. If the source is
+        remote, use a temporary downloaded version of the file.
+        """
+        tmp = None
+        if store is None:
+            store, uri = get_store_for_uri(uri)
+        if store.is_local:
+            info = store.info(uri)
+            content_hash = store.checksum(uri)
+        else:
+            tmp = get_virtual()
+            key = tmp.download(uri, store)
+            content_hash = tmp.store.checksum(key)
+            info = tmp.store.info(key)
+        file = OriginalFile.from_info(
+            info, self.dataset.name, content_hash=content_hash
+        )
+        # file.name = name_from_uri(uri)
+        try:
+            yield file
+        finally:
+            if tmp is not None:
+                tmp.cleanup()

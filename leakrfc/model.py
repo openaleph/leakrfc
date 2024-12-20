@@ -83,6 +83,11 @@ class File(Stats):
             self.mimetype = guess_mimetype(self.name) or DEFAULT
         return self
 
+    @model_validator(mode="after")
+    def ensure_updated_at(self):
+        self.updated_at = self.updated_at or self.created_at
+        return self
+
 
 class OriginalFile(File):
     origin: ClassVar = ORIGIN_ORIGINAL
@@ -90,8 +95,7 @@ class OriginalFile(File):
 
 class ExtractedFile(File):
     origin: ClassVar = ORIGIN_EXTRACTED
-    parent: str
-    root: str
+    archive: str
 
 
 class ConvertedFile(File):
@@ -123,6 +127,14 @@ class Document(BaseModel):
         )
         return io.getvalue().strip()
 
+    @classmethod
+    def from_csv(cls, line: str, dataset: str) -> Self:
+        io = StringIO(line)
+        for row in csv.reader(io):
+            data = dict(zip(cls.model_fields.keys(), [None, *row]))
+            data["dataset"] = dataset
+            return cls(**data)
+
     @field_validator("created_at", mode="before")
     @classmethod
     def ensure_created_at(cls, v: Any):
@@ -140,3 +152,4 @@ class Document(BaseModel):
 
 OriginalFiles: TypeAlias = Generator[OriginalFile, None, None]
 Files: TypeAlias = Generator[File, None, None]
+Docs: TypeAlias = Generator[Document, None, None]

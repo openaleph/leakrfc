@@ -249,13 +249,13 @@ trio = ["trio (>=0.26.1)"]
 
 [[package]]
 name = "anystore"
-version = "0.1.13"
+version = "0.2.1"
 description = "Store and cache things anywhere"
 optional = false
 python-versions = "<4,>=3.11"
 files = [
-    {file = "anystore-0.1.13-py3-none-any.whl", hash = "sha256:ab98e6a720ce0c9982abad5da4e39667332a3a93d23eec0164b4b37962acf88c"},
-    {file = "anystore-0.1.13.tar.gz", hash = "sha256:d5ed82fa4143ab696f7eda39d7b3d131d797e197ea0b609597f5c16bf2ea9731"},
+    {file = "anystore-0.2.1-py3-none-any.whl", hash = "sha256:0bde6c33a009572c659ba147b97c4d33e131c666e98eb27dfa39b2437eaefd47"},
+    {file = "anystore-0.2.1.tar.gz", hash = "sha256:acafef84bd6bcac3f0f86dd0cb252346d37b8fd0f1d1bc6046bd1f9a78471d18"},
 ]
 
 [package.dependencies]
@@ -275,7 +275,7 @@ s3fs = ">2023.10,<2025"
 shortuuid = ">=1.0.13,<2.0.0"
 sshfs = ">=2024.9.0,<2025.0.0"
 structlog = ">=24.4.0,<25.0.0"
-typer = ">=0.9,<0.13"
+typer = ">=0.9,<0.16"
 
 [[package]]
 name = "asttokens"
@@ -1082,13 +1082,13 @@ pyflakes = ">=3.2.0,<3.3.0"
 
 [[package]]
 name = "followthemoney"
-version = "3.7.4"
+version = "3.7.12"
 description = ""
 optional = false
 python-versions = "*"
 files = [
-    {file = "followthemoney-3.7.4-py2.py3-none-any.whl", hash = "sha256:1e77d1aaafe30b59242e61f78a62a90a07037147021532f01a3bb5c915b74d27"},
-    {file = "followthemoney-3.7.4.tar.gz", hash = "sha256:3b5717b0757f8f5d3b484ebbbe014ce744b431477063842fc0732fee8ac2cdce"},
+    {file = "followthemoney-3.7.12-py2.py3-none-any.whl", hash = "sha256:1f113b524931b58ac13e90adb0890bd89913f7213206f6278e1bb0a413daa8ab"},
+    {file = "followthemoney-3.7.12.tar.gz", hash = "sha256:50ee571fcbf3a3c82eaa2fdd711ea7dd4d57a9415993d09aa66c6dedc3c00f0f"},
 ]
 
 [package.dependencies]
@@ -1097,7 +1097,7 @@ banal = ">=1.0.6,<1.1.0"
 click = ">=8.0,<9.0.0"
 countrynames = ">=1.13.0,<2.0.0"
 fingerprints = ">=1.0.1,<2.0.0"
-networkx = ">=2.5,<3.4"
+networkx = ">=2.5,<3.5"
 normality = ">=2.4.0,<3.0.0"
 openpyxl = ">=3.0.5,<4.0.0"
 orjson = ">=3.7,<4.0"
@@ -1106,9 +1106,9 @@ prefixdate = ">=0.4.0,<1.0.0"
 python-stdnum = ">=1.16,<2.0.0"
 pytz = ">=2021.1"
 pyyaml = ">=5.0.0,<7.0.0"
-rdflib = ">=6.2.0,<7.1.0"
+rdflib = ">=6.2.0,<7.2.0"
 requests = ">=2.21.0,<3.0.0"
-rigour = ">=0.6.1,<1.0.0"
+rigour = ">=0.8.1,<1.0.0"
 sqlalchemy = ">=1.4.49,<3.0.0"
 sqlalchemy2-stubs = "*"
 stringcase = ">=1.2.0,<2.0.0"
@@ -1259,24 +1259,24 @@ tqdm = ["tqdm"]
 
 [[package]]
 name = "ftmq"
-version = "0.6.14"
+version = "0.7.0"
 description = "followthemoney query dsl and io helpers"
 optional = false
 python-versions = "<4,>=3.11"
 files = [
-    {file = "ftmq-0.6.14-py3-none-any.whl", hash = "sha256:c18f7c75faefaec6091f9338c577092d9ea4d239022d62f5b935dede42e2a6f6"},
-    {file = "ftmq-0.6.14.tar.gz", hash = "sha256:58b7c343ece2de3e41cc9f5b74a1d4964646b7c67599d7ad8a3247831239403a"},
+    {file = "ftmq-0.7.0-py3-none-any.whl", hash = "sha256:f53190ac572eab8435e609409491eab8ccb4042ab288ee73219572f91320d114"},
+    {file = "ftmq-0.7.0.tar.gz", hash = "sha256:6e75139514e03ed19d7a9352147904110c7cf34dd1652f4fda97cc1bfd066bad"},
 ]
 
 [package.dependencies]
 alephclient = ">=2.4.1,<3.0.0"
-anystore = ">=0.1.10,<0.2.0"
+anystore = ">=0.2.0,<0.3.0"
 banal = ">=1.0.6,<2.0.0"
 certifi = ">=2024.2.2"
 click = ">=8.1.7,<9.0.0"
 click-default-group = ">=1.2.4,<2.0.0"
-cryptography = ">=42.0.7,<44.0.0"
-followthemoney = ">=3.6.4,<4.0.0"
+cryptography = ">=42.0.7,<45.0.0"
+followthemoney = ">=3.7.9,<4.0.0"
 nomenklatura = "<3.13"
 orjson = ">=3.10.3,<4.0.0"
 pantomime = ">=0.6.1,<0.7.0"
@@ -2223,13 +2223,13 @@ files = [
 
 [[package]]
 name = "moto"
-version = "5.0.19"
+version = "5.0.20"
 description = ""
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "moto-5.0.19-py2.py3-none-any.whl", hash = "sha256:b9c4911549f5cbb2db0b8d0c7adb27b332300a3ecdc90422777538760e026963"},
-    {file = "moto-5.0.19.tar.gz", hash = "sha256:e6c6e1558f65c01fe1b3b5cc7ee35b474167fe3600326990f54601d75a7ea639"},
+    {file = "moto-5.0.20-py2.py3-none-any.whl", hash = "sha256:b6df0041255acb973f2adcb31e3dee1379770ece0253520d4d15986d22aa06cf"},
+    {file = "moto-5.0.20.tar.gz", hash = "sha256:24b1319cc66f81f40817a57ac80602a5f1862669bdd621f0d96ab989a6578255"},
 ]
 
 [package.dependencies]
@@ -2763,6 +2763,20 @@ files = [
 ]
 
 [[package]]
+name = "patool"
+version = "3.1.0"
+description = "portable archive file manager"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "patool-3.1.0-py2.py3-none-any.whl", hash = "sha256:401a918bdbf65434fd59c038bdb2c15ff7185675aedddb4494330c3e8e4fe80d"},
+    {file = "patool-3.1.0.tar.gz", hash = "sha256:417ed1ff7b9c979ce8a10114ed9bc280b08e3af3df3072e761303a3e00aaba04"},
+]
+
+[package.extras]
+argcompletion = ["argcomplete (==3.5.1)"]
+
+[[package]]
 name = "pexpect"
 version = "4.9.0"
 description = "Pexpect allows easy control of interactive console applications."
@@ -2778,13 +2792,13 @@ ptyprocess = ">=0.5"
 
 [[package]]
 name = "phonenumbers"
-version = "8.13.48"
+version = "8.13.49"
 description = "Python version of Google's common library for parsing, formatting, storing and validating international phone numbers."
 optional = false
 python-versions = "*"
 files = [
-    {file = "phonenumbers-8.13.48-py2.py3-none-any.whl", hash = "sha256:5c51939acefa390eb74119750afb10a85d3c628dc83fd62c52d6f532fcf5d205"},
-    {file = "phonenumbers-8.13.48.tar.gz", hash = "sha256:62d8df9b0f3c3c41571c6b396f044ddd999d61631534001b8be7fdf7ba1b18f3"},
+    {file = "phonenumbers-8.13.49-py2.py3-none-any.whl", hash = "sha256:e17140955ab3d8f9580727372ea64c5ada5327932d6021ef6fd203c3db8c8139"},
+    {file = "phonenumbers-8.13.49.tar.gz", hash = "sha256:e608ccb61f0bd42e6db1d2c421f7c22186b88f494870bf40aa31d1a2718ab0ae"},
 ]
 
 [[package]]
@@ -3781,12 +3795,12 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "rigour"
-version = "0.6.1"
+version = "0.8.2"
 description = "Financial crime domain data validation and normalization library."
 optional = false
 python-versions = "*"
 files = [
-    {file = "rigour-0.6.1-py2.py3-none-any.whl", hash = "sha256:62fed18b56ad4a8bac4c8ca145088aa1d37b0bcb7fb64dc7d1b0d5011b9b9f12"},
+    {file = "rigour-0.8.2-py2.py3-none-any.whl", hash = "sha256:73d7ad3a3c625322cb74481f501937ad73f5804b8508c30df2b521bf2a2b8583"},
 ]
 
 [package.dependencies]
@@ -3794,6 +3808,7 @@ babel = ">=2.9.1,<3.0.0"
 banal = ">=1.0.6,<1.1.0"
 fingerprints = ">=1.0.1,<2.0.0"
 jellyfish = ">=1.0.0,<2.0.0"
+jinja2 = ">=3.1.0,<4.0.0"
 normality = ">=2.4.0,<3.0.0"
 python-stdnum = ">=1.16,<2.0.0"
 pytz = ">=2021.1"
@@ -4321,13 +4336,13 @@ files = [
 
 [[package]]
 name = "werkzeug"
-version = "3.1.1"
+version = "3.1.2"
 description = "The comprehensive WSGI web application library."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "werkzeug-3.1.1-py3-none-any.whl", hash = "sha256:a71124d1ef06008baafa3d266c02f56e1836a5984afd6dd6c9230669d60d9fb5"},
-    {file = "werkzeug-3.1.1.tar.gz", hash = "sha256:8cd39dfbdfc1e051965f156163e2974e52c210f130810e9ad36858f0fd3edad4"},
+    {file = "werkzeug-3.1.2-py3-none-any.whl", hash = "sha256:4f7d1a5de312c810a8a2c6f0b47e9f6a7cffb7c8322def35e4d4d9841ff85597"},
+    {file = "werkzeug-3.1.2.tar.gz", hash = "sha256:f471a4cd167233077e9d2a8190c3471c5bc520c636a9e3c1e9300c33bced03bc"},
 ]
 
 [package.dependencies]
@@ -4525,4 +4540,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<4"
-content-hash = "b0331d57730729a34dfe9c041b5aead3cbb028f16aed8391b79ea2ed5a8e044e"
+content-hash = "e1c4af2b80ebfa0d60a4a3bf765524c324eb075e3a160cadc97d05bce73f5072"

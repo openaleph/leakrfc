@@ -170,14 +170,38 @@ def cli_ls(
 @cli.command("crawl")
 def cli_crawl(
     uri: str,
-    out_uri: Annotated[str, typer.Option("-o")] = "-",
+    out_uri: Annotated[
+        str, typer.Option("-o", help="Write results to this destination")
+    ] = "-",
     use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
+    skip_existing: Annotated[
+        Optional[bool],
+        typer.Option(
+            help="Skip already existing files (doesn't check actual similarity)"
+        ),
+    ] = True,
+    extract: Annotated[
+        Optional[bool], typer.Option(help="Extract archives via `patool`")
+    ] = False,
+    extract_keep_source: Annotated[
+        Optional[bool], typer.Option(help="Keep the source archive when extracting")
+    ] = False,
 ):
     """
     Crawl documents from local or remote sources
     """
     with Dataset() as dataset:
-        write_obj(crawl(uri, dataset, use_cache=use_cache), out_uri)
+        write_obj(
+            crawl(
+                uri,
+                dataset,
+                use_cache=use_cache,
+                skip_existing=skip_existing,
+                extract=extract,
+                extract_keep_source=extract_keep_source,
+            ),
+            out_uri,
+        )
 
 
 @cli.command("export")

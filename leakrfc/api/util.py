@@ -65,7 +65,7 @@ class Errors:
 @anycache(store=get_cache(), key_func=lambda d, k: f"api/file/{d}/{k}", model=File)
 def get_file_info(dataset: str, key: str) -> File | None:
     storage = archive.get_dataset(dataset)
-    return storage.lookup_file_by_hash(key)
+    return storage.lookup_file_by_content_hash(key)
 
 
 def ensure_path_context(dataset: str, key: str) -> Context:
@@ -75,7 +75,7 @@ def ensure_path_context(dataset: str, key: str) -> Context:
 
 def stream_file(ctx: Context) -> StreamingResponse:
     storage = archive.get_dataset(ctx.dataset)
-    file = storage.lookup_file_by_hash(ctx.key)
+    file = storage.lookup_file_by_content_hash(ctx.key)
     return StreamingResponse(
         storage.stream_file(file),
         headers=ctx.headers,

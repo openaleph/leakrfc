@@ -8,6 +8,8 @@ from tests.conftest import setup_s3
 
 
 def _test_dataset(dataset: DatasetArchive | ReadOnlyDatasetArchive):
+    files = [f for f in dataset.iter_files(use_db=False)]
+    assert len(files) == 74
     files = [f for f in dataset.iter_files()]
     assert len(files) == 74
 
@@ -18,18 +20,12 @@ def _test_dataset(dataset: DatasetArchive | ReadOnlyDatasetArchive):
     key = "utf.txt"
     content_hash = "5a6acf229ba576d9a40b09292595658bbb74ef56"
 
+    # lookup by content hash
+    assert dataset.lookup_file_by_content_hash(content_hash) == dataset.lookup_file(key)
+
     # lookup by key
     assert dataset.exists(key)
     file = dataset.lookup_file(key)
-    assert file.key == "utf.txt"
-    assert file.content_hash == content_hash
-    assert file.mimetype == PLAIN
-    with dataset.open_file(file) as fh:
-        assert fh.read() == "Îș unî©ođ€.\n".encode()
-
-    # lookup by hash
-    assert dataset.exists_hash(content_hash)
-    file = dataset.lookup_file_by_hash(content_hash)
     assert file.key == "utf.txt"
     assert file.content_hash == content_hash
     assert file.mimetype == PLAIN

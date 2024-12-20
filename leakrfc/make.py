@@ -29,18 +29,13 @@ Action: TypeAlias = Literal["info", "source"]
 Task: TypeAlias = tuple[str, Action]
 
 
-def make_cache_key(self: "LeakrfcWorker", task: Task) -> str | None:
+def make_cache_key(self: "MakeWorker", task: Task) -> str | None:
     if self.use_cache:
         key, action = task
         return f"{self.dataset.name}/make/{action}/{key}"
 
 
-def make_cache_key_integrity(self: "LeakrfcWorker", key: str) -> str | None:
-    if self.use_cache:
-        return f"{self.dataset.name}/make/integrity/{key}"
-
-
-class LeakrfcWorker(DatasetWorker):
+class MakeWorker(DatasetWorker):
     def __init__(
         self,
         check_integrity: bool | None = True,
@@ -59,7 +54,7 @@ class LeakrfcWorker(DatasetWorker):
             self.count(files_total=1)
             yield key, ACTION_SOURCE
         self.log_info("Checking existing files ...")
-        for file in super().get_tasks():
+        for file in self.dataset.iter_files(use_db=False):
             self.count(metadata_total=1)
             yield file.key, ACTION_INFO
 
@@ -70,15 +65,14 @@ class LeakrfcWorker(DatasetWorker):
         if action == ACTION_SOURCE:
             self.log_info(f"Checking `{key}` ...", action=action)
             if not self.dataset.exists(key):
-                self.dataset.archive_file(key, self.dataset._storage)
+                with self.local_file(key, self.dataset._storage) as file:
+                    self.dataset.archive_file(file, copy=False)
                 self.count(files_added=1)
-            self._ensure_integrity(key)
         elif action == ACTION_INFO:
             self.log_info(f"Checking `{key}` metadata ...", action=action)
             self._ensure_integrity(key)
         return now
 
-    @anycache(store=get_cache(), key_func=make_cache_key_integrity)
     def _ensure_integrity(self, key: str) -> None:
         if self.check_integrity:
             self.count(files_checked=1)
@@ -110,5 +104,5 @@ def make_dataset(
     check_integrity: bool | None = True,
     cleanup: bool | None = True,
 ) -> MakeStatus:
-    worker = LeakrfcWorker(check_integrity, cleanup, dataset, use_cache=use_cache)
+    worker = MakeWorker(check_integrity, cleanup, dataset, use_cache=use_cache)
     return worker.run()

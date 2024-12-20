@@ -8,6 +8,7 @@ memorious format:
         ./<sha1>.json              # metadata file
 """
 
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import unquote, urlparse
@@ -55,15 +56,13 @@ class MemoriousWorker(DatasetWorker):
     def get_tasks(self) -> StrGenerator:
         yield from self.memorious.iterate_keys(glob="*.json")
 
-    def handle_task(self, task: str) -> None:
+    @anycache(store=get_cache(), key_func=make_cache_key)
+    def handle_task(self, task: str) -> datetime:
         file = self.load_memorious(task)
         if file is not None:
             if not self.dataset.exists(file.key):
-                self.dataset.archive_file(
-                    file.extra.pop("_file_name"),
-                    store=self.memorious,
-                    file=file,
-                )
+                uri = self.memorious.get_key(file.extra.pop("_file_name"))
+                self.dataset.archive_file(file, from_uri=uri)
                 self.count(added=1)
             else:
                 self.log_info(
@@ -71,8 +70,8 @@ class MemoriousWorker(DatasetWorker):
                     store=self.memorious.uri,
                 )
                 self.count(skipped=1)
+        return datetime.now()
 
-    @anycache(store=get_cache(), key_func=make_cache_key, model=OriginalFile)
     def load_memorious(self, key: str) -> OriginalFile | None:
         data = self.memorious.get(key, serialization_mode="json")
         content_hash = data.pop("content_hash", None)
@@ -81,6 +80,7 @@ class MemoriousWorker(DatasetWorker):
             self.count(not_found=1)
         elif data.get("_file_name") is None:
             log.warning(f"No original file for `{key}`", store=self.memorious.uri)
+            self.count(not_found=1)
         else:
             key = self.key_func(data)
             info = self.memorious.info(data["_file_name"])
@@ -95,7 +95,10 @@ class MemoriousWorker(DatasetWorker):
             )
 
     def done(self) -> None:
-        self.log_info(f"Done memorious import from `{self.memorious.uri}`")
+        documents = self.dataset.documents.write()
+        self.log_info(
+            f"Done memorious import from `{self.memorious.uri}`", documents=documents
+        )
 
 
 def import_memorious(

@@ -5,7 +5,7 @@ from leakrfc.make import make_dataset
 
 def test_make(fixtures_path, tmp_path):
     dataset = get_dataset("test_dataset", uri=tmp_path / "test")
-    crawl(fixtures_path / "src", dataset)
+    crawl(fixtures_path / "src", dataset, use_cache=False)
     res = make_dataset(dataset, use_cache=False)
     assert res.files_total == 74
     assert res.integrity_errors == 0

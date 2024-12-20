@@ -30,12 +30,14 @@ def test_sync_memorious(fixtures_path, tmp_path):
     assert archived_file.name == file.name
     assert archived_file.key == file.key
 
-    assert dataset.exists_hash(file.content_hash)
-
     # now cached
     res = import_memorious(dataset, fixtures_path / "memorious/")
     assert res.added == 0
-    assert res.skipped == 1
+    assert res.skipped == 0  # cached
+    assert len([f for f in dataset.iter_files()]) == 1
+    archived_file = next(dataset.iter_files())
+    assert archived_file.name == file.name
+    assert archived_file.key == file.key
 
     # custom file key (path) method
     def get_key(data):

@@ -1,5 +1,5 @@
 import os
-from functools import cache
+from functools import lru_cache
 
 from anystore.model import StoreModel
 from anystore.types import Uri
@@ -19,7 +19,7 @@ def configure_archive(**kwargs) -> Archive:
     return Archive(**{**settings.model_dump(), **kwargs})
 
 
-@cache
+@lru_cache(1024)
 def get_archive(uri: Uri | None = None, **kwargs) -> Archive:
     if uri is not None:
         uri = ensure_uri(uri)
@@ -31,7 +31,7 @@ def get_archive(uri: Uri | None = None, **kwargs) -> Archive:
     return configure_archive()
 
 
-@cache
+@lru_cache(1024)
 def get_dataset(
     dataset: str, uri: Uri | None = None, **kwargs
 ) -> DatasetArchive | ReadOnlyDatasetArchive:
