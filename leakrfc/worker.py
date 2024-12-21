@@ -18,6 +18,10 @@ log = get_logger(__name__)
 settings = Settings()
 
 
+def make_cache_key(worker: "DatasetWorker", action: str, *extra: str) -> str:
+    return f"{worker.dataset.name}/{action}/{'/'.join(extra)}".lower()
+
+
 class DatasetWorker(Worker):
     def __init__(
         self, dataset: "DatasetArchive", use_cache: bool | None = True, *args, **kwargs

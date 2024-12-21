@@ -24,18 +24,18 @@ from leakrfc.archive.cache import get_cache
 from leakrfc.logging import get_logger
 from leakrfc.model import OriginalFile
 from leakrfc.util import render
-from leakrfc.worker import DatasetWorker
+from leakrfc.worker import DatasetWorker, make_cache_key
 
 log = get_logger(__name__)
 
 
-def make_cache_key(self: "MemoriousWorker", key: str) -> str | None:
+def get_cache_key(self: "MemoriousWorker", key: str) -> str | None:
     if not self.use_cache:
         return
     host = urlparse(self.memorious.uri).netloc
     if host is None:
         host = make_data_checksum(str(self.memorious.uri))
-    return f"memorious/sync/{host}/{self.dataset.name}/{key}"
+    return make_cache_key(self, "sync", "memorious", host, key)
 
 
 class MemoriousStatus(WorkerStatus):
@@ -56,8 +56,9 @@ class MemoriousWorker(DatasetWorker):
     def get_tasks(self) -> StrGenerator:
         yield from self.memorious.iterate_keys(glob="*.json")
 
-    @anycache(store=get_cache(), key_func=make_cache_key)
+    @anycache(store=get_cache(), key_func=get_cache_key)
     def handle_task(self, task: str) -> datetime:
+        now = datetime.now()
         file = self.load_memorious(task)
         if file is not None:
             if not self.dataset.exists(file.key):
@@ -70,7 +71,7 @@ class MemoriousWorker(DatasetWorker):
                     store=self.memorious.uri,
                 )
                 self.count(skipped=1)
-        return datetime.now()
+        return now
 
     def load_memorious(self, key: str) -> OriginalFile | None:
         data = self.memorious.get(key, serialization_mode="json")

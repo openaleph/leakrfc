@@ -2,6 +2,7 @@
 Crawl document collections from public accessible archives (or local folders)
 """
 
+from datetime import datetime
 from fnmatch import fnmatch
 from typing import Generator
 
@@ -15,14 +16,14 @@ from leakrfc.archive import DatasetArchive
 from leakrfc.archive.cache import get_cache
 from leakrfc.extract import handle_extract, is_archive
 from leakrfc.logging import get_logger
-from leakrfc.worker import DatasetWorker
+from leakrfc.worker import DatasetWorker, make_cache_key
 
 log = get_logger(__name__)
 
 
 def get_cache_key(self: "CrawlWorker", key: str) -> str | None:
     if self.use_cache:
-        return f"crawl/{self.dataset.name}/{key}"
+        return make_cache_key(self, "crawl", key)
 
 
 class CrawlStatus(WorkerStatus):
@@ -64,17 +65,18 @@ class CrawlWorker(DatasetWorker):
                 yield key
 
     @anycache(store=get_cache(), key_func=get_cache_key)
-    def handle_task(self, task: str) -> None:
+    def handle_task(self, task: str) -> datetime:
+        now = datetime.now()
         if self.skip_existing and self.dataset.exists(task):
             self.log_info(
                 f"Skipping already existing `{task}` ...", remote=self.remote.uri
             )
-            return
+            return now
         self.log_info(f"Crawling `{task}` ...", remote=self.remote.uri)
         with self.local_file(task, self.remote) as file:
             if self.extract and is_archive(file):
                 self.count(packages=1)
-                out = handle_extract(file)
+                out = handle_extract(file, self.extract_keep_source)
                 if out is not None:
                     res = self.crawl_child(out)
                     self.count(extracted=res.done)
@@ -84,6 +86,7 @@ class CrawlWorker(DatasetWorker):
                     self.dataset.archive_file(file)
             else:
                 self.dataset.archive_file(file)
+        return now
 
     def crawl_child(self, uri: Uri) -> CrawlStatus:
         return crawl(

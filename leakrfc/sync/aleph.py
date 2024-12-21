@@ -15,13 +15,13 @@ from leakrfc.archive.cache import get_cache
 from leakrfc.archive.dataset import DatasetArchive
 from leakrfc.connectors import aleph
 from leakrfc.model import OriginalFile
-from leakrfc.worker import DatasetWorker
+from leakrfc.worker import DatasetWorker, make_cache_key
 
 
 def _make_cache_key(self: "AlephUploadWorker", *parts: str) -> str:
     host = urlparse(self.host).netloc
-    base = f"aleph/upload/{host}/{self.dataset.name}/"
-    return base + "/".join(parts)
+    assert host is not None
+    return make_cache_key(self, "sync", "aleph", host, *parts)
 
 
 def get_upload_cache_key(self: "AlephUploadWorker", file: OriginalFile) -> str | None:

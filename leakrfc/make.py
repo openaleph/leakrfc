@@ -11,7 +11,7 @@ from anystore.worker import WorkerStatus
 
 from leakrfc.archive.cache import get_cache
 from leakrfc.archive.dataset import DatasetArchive
-from leakrfc.worker import DatasetWorker
+from leakrfc.worker import DatasetWorker, make_cache_key
 
 
 class MakeStatus(WorkerStatus):
@@ -29,10 +29,10 @@ Action: TypeAlias = Literal["info", "source"]
 Task: TypeAlias = tuple[str, Action]
 
 
-def make_cache_key(self: "MakeWorker", task: Task) -> str | None:
+def get_cache_key(self: "MakeWorker", task: Task) -> str | None:
     if self.use_cache:
         key, action = task
-        return f"{self.dataset.name}/make/{action}/{key}"
+        return make_cache_key(self, "make", action, key)
 
 
 class MakeWorker(DatasetWorker):
@@ -58,10 +58,10 @@ class MakeWorker(DatasetWorker):
             self.count(metadata_total=1)
             yield file.key, ACTION_INFO
 
-    @anycache(store=get_cache(), key_func=make_cache_key)
+    @anycache(store=get_cache(), key_func=get_cache_key)
     def handle_task(self, task: Task) -> str:
-        key, action = task
         now = datetime.now().isoformat()
+        key, action = task
         if action == ACTION_SOURCE:
             self.log_info(f"Checking `{key}` ...", action=action)
             if not self.dataset.exists(key):

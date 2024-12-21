@@ -61,7 +61,7 @@ def make_folders(path: str, collection_id: str, parent: str | None = None) -> st
     api = get_api()
     log.info(f"Creating folder: `{path}`", host=get_host(api))
     folder = Path(path)
-    foreign_id = "/".join(folder.parts)
+    foreign_id = "/".join(folder.parts)  # same as alephclient
     if len(folder.parts) > 1:
         parent = make_folders(os.path.join(*folder.parts[:-1]), collection_id, parent)
     metadata: dict[str, Any] = {"file_name": folder.name, "foreign_id": foreign_id}
