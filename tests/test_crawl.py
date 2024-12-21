@@ -35,6 +35,19 @@ def test_crawl_extract(tmp_path, fixtures_path):
     assert res.extracted + res.done - res.packages == len(
         [f for f in dataset.iter_files()]
     )
+    assert dataset.exists("500_pages.7z/tests/fixtures/500 pages.pdf")
+    assert dataset.exists("testdir/test-documents.rar/test-documents/testPDF.pdf")
+
+    url = "http://localhost:8000/src"
+    dataset = get_dataset("test2", uri=tmp_path / "test2")
+    res = crawl(url, dataset, extract=True, use_cache=False)
+    assert res.extracted == 28
+    assert res.packages == 4
+    assert res.extracted + res.done - res.packages == len(
+        [f for f in dataset.iter_files()]
+    )
+    assert dataset.exists("500_pages.7z/tests/fixtures/500 pages.pdf")
+    assert dataset.exists("testdir/test-documents.rar/test-documents/testPDF.pdf")
 
 
 def test_crawl_extract_keep(tmp_path, fixtures_path):
@@ -49,6 +62,27 @@ def test_crawl_extract_keep(tmp_path, fixtures_path):
     assert res.extracted == 28
     assert res.packages == 4
     assert res.extracted + res.done == len([f for f in dataset.iter_files()])
+    assert dataset.exists("__extracted__/500_pages.7z/tests/fixtures/500 pages.pdf")
+    assert dataset.exists(
+        "testdir/__extracted__/test-documents.rar/test-documents/testPDF.pdf"
+    )
+
+    url = "http://localhost:8000/src"
+    dataset = get_dataset("test2", uri=tmp_path / "test2")
+    res = crawl(
+        url,
+        dataset,
+        extract=True,
+        extract_keep_source=True,
+        use_cache=False,
+    )
+    assert res.extracted == 28
+    assert res.packages == 4
+    assert res.extracted + res.done == len([f for f in dataset.iter_files()])
+    assert dataset.exists("__extracted__/500_pages.7z/tests/fixtures/500 pages.pdf")
+    assert dataset.exists(
+        "testdir/__extracted__/test-documents.rar/test-documents/testPDF.pdf"
+    )
 
 
 def test_crawl_globs(tmp_path, fixtures_path):
