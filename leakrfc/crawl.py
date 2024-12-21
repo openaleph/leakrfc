@@ -2,6 +2,7 @@
 Crawl document collections from public accessible archives (or local folders)
 """
 
+from fnmatch import fnmatch
 from typing import Generator
 
 from anystore import anycache, get_store
@@ -37,6 +38,8 @@ class CrawlWorker(DatasetWorker):
         extract: bool | None = False,
         extract_keep_source: bool | None = False,
         write_documents_db: bool | None = False,
+        exclude: str | None = None,
+        include: str | None = None,
         **kwargs,
     ) -> None:
         kwargs["status_model"] = kwargs.get("status_model", CrawlStatus)
@@ -46,10 +49,19 @@ class CrawlWorker(DatasetWorker):
         self.extract = extract
         self.extract_keep_source = extract_keep_source
         self.write_documents_db = write_documents_db
+        self.exclude = exclude
+        self.include = include
 
     def get_tasks(self) -> Generator[str, None, None]:
         self.log_info(f"Crawling `{self.remote.uri}` ...")
-        yield from self.remote.iterate_keys()
+        for key in self.remote.iterate_keys():
+            if self.exclude or self.include:
+                if self.exclude and not fnmatch(key, self.exclude):
+                    yield key
+                elif self.include and fnmatch(key, self.include):
+                    yield key
+            else:
+                yield key
 
     @anycache(store=get_cache(), key_func=get_cache_key)
     def handle_task(self, task: str) -> None:
@@ -97,6 +109,8 @@ def crawl(
     extract_keep_source: bool | None = False,
     use_cache: bool | None = True,
     write_documents_db: bool | None = True,
+    exclude: str | None = None,
+    include: str | None = None,
 ) -> CrawlStatus:
     remote_store = get_store(uri=uri, serialization_mode="raw")
     worker = CrawlWorker(
@@ -107,5 +121,7 @@ def crawl(
         extract_keep_source=extract_keep_source,
         use_cache=use_cache,
         write_documents_db=write_documents_db,
+        exclude=exclude,
+        include=include,
     )
     return worker.run()

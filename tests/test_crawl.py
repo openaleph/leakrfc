@@ -47,3 +47,11 @@ def test_crawl_extract(tmp_path, fixtures_path):
     assert res.extracted == 28
     assert res.packages == 4
     assert res.extracted + res.done == len([f for f in dataset.iter_files()])
+
+
+def test_crawl_globs(tmp_path, fixtures_path):
+    dataset = get_dataset("crawled-glob", uri=tmp_path / "test-archive")
+    res = crawl(fixtures_path / "src", dataset, use_cache=False, include="*.pdf")
+    assert res.done == 12
+    res = crawl(fixtures_path / "src", dataset, use_cache=False, exclude="*.pdf")
+    assert res.done == 74 - 12

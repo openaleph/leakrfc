@@ -67,10 +67,9 @@ class Documents:
         return len(df)
 
     def get_merged(self) -> pd.DataFrame:
-        cache = pd.DataFrame(
-            d.model_dump(exclude={"dataset"}) for d in self.iter_cache()
-        )
-        df = pd.concat((self.db, cache))
+        df = pd.DataFrame(d.model_dump(exclude={"dataset"}) for d in self.iter_cache())
+        if len(self.db):
+            df = pd.concat((self.db, df))
         return df.drop_duplicates(subset=("key", "content_hash")).sort_values("key")
 
     def iter_cache(self) -> Docs:

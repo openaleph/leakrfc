@@ -186,6 +186,12 @@ def cli_crawl(
     extract_keep_source: Annotated[
         Optional[bool], typer.Option(help="Keep the source archive when extracting")
     ] = False,
+    exclude: Annotated[
+        Optional[str], typer.Option(help="Exclude paths glob pattern")
+    ] = None,
+    include: Annotated[
+        Optional[str], typer.Option(help="Include paths glob pattern")
+    ] = None,
 ):
     """
     Crawl documents from local or remote sources
@@ -199,6 +205,8 @@ def cli_crawl(
                 skip_existing=skip_existing,
                 extract=extract,
                 extract_keep_source=extract_keep_source,
+                exclude=exclude,
+                include=include,
             ),
             out_uri,
         )
