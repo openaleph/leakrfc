@@ -151,6 +151,7 @@ def cli_head(key: str, out_uri: Annotated[str, typer.Option("-o")] = "-"):
 def cli_ls(
     out_uri: Annotated[str, typer.Option("-o")] = "-",
     keys: Annotated[bool, typer.Option(help="Show only keys")] = False,
+    checksums: Annotated[bool, typer.Option(help="Show only checksums")] = False,
 ):
     """
     List all files in dataset archive
@@ -158,6 +159,8 @@ def cli_ls(
     with Dataset() as dataset:
         if keys:
             files = (f.key.encode() + b"\n" for f in dataset.iter_files())
+        elif checksums:
+            files = (f.content_hash.encode() + b"\n" for f in dataset.iter_files())
         else:
             files = (
                 orjson.dumps(f.model_dump(), option=orjson.OPT_APPEND_NEWLINE)
