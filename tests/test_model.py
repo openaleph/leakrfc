@@ -1,13 +1,15 @@
 from datetime import datetime
 
+from ftmq.model import Dataset
 from nomenklatura.dataset import DefaultDataset
-from pantomime.types import PLAIN
+from rigour.mime.types import PLAIN
 
 from leakrfc.model import (
     ORIGIN_CONVERTED,
     ORIGIN_EXTRACTED,
     ORIGIN_ORIGINAL,
     ConvertedFile,
+    DatasetModel,
     ExtractedFile,
     OriginalFile,
 )
@@ -63,3 +65,10 @@ def test_model():
     assert doc.content_hash == file.content_hash
     assert doc.size == file.size
     assert doc.to_csv().startswith("utf.txt,ch-root,19,text/plain")
+
+
+def test_model_dataset(fixtures_path):
+    config = fixtures_path / "archive/test_dataset/.leakrfc/config.yml"
+    dataset = DatasetModel.from_yaml_uri(config)
+    assert isinstance(dataset, Dataset)
+    assert Dataset(**dataset.model_dump())

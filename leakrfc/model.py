@@ -12,8 +12,8 @@ from anystore.util import make_data_checksum
 from ftmq.util import make_proxy
 from nomenklatura.dataset import DefaultDataset
 from nomenklatura.entity import CE
-from pantomime import DEFAULT
 from pydantic import field_validator, model_validator
+from rigour.mime import DEFAULT
 
 from leakrfc.util import guess_mimetype
 

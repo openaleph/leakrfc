@@ -1,9 +1,10 @@
 from moto import mock_aws
-from pantomime import PLAIN
+from rigour.mime.types import PLAIN
 
 from leakrfc.archive import get_archive, get_dataset
 from leakrfc.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
 from leakrfc.crawl import crawl
+from leakrfc.model import ArchiveModel, DatasetModel
 from tests.conftest import setup_s3
 
 
@@ -44,6 +45,11 @@ def test_archive_datasets():
 
 
 def test_archive_dataset(test_dataset):
+    assert test_dataset.config.leakrfc == ArchiveModel(**test_dataset.model_dump())
+    test_dataset.make_index()
+    assert test_dataset.config == test_dataset._storage.get(
+        test_dataset._get_index_path(), model=DatasetModel
+    )
     assert _test_dataset(test_dataset)
 
 
