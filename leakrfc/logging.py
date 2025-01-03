@@ -30,7 +30,7 @@ def get_logger(name: str, *args, **kwargs) -> BoundLogger:
     return get_raw_logger(name, *args, **kwargs)
 
 
-def configure_logging(level: int = logging.INFO) -> None:
+def configure_logging(level: int = logging.INFO, logger: str | None = None) -> None:
     """Configure log levels and structured logging"""
     shared_processors: List[Any] = [
         add_log_level,
@@ -83,7 +83,7 @@ def configure_logging(level: int = logging.INFO) -> None:
     error_handler.setLevel(logging.ERROR)
     error_handler.setFormatter(formatter)
 
-    root_logger = logging.getLogger()
+    root_logger = logging.getLogger(logger) if logger else logging.getLogger()
     root_logger.setLevel(settings.log_level.upper())
     root_logger.addHandler(out_handler)
     root_logger.addHandler(error_handler)
