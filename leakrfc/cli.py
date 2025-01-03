@@ -3,6 +3,7 @@ from typing import Annotated, Any, Optional, TypedDict
 import orjson
 import typer
 from anystore.io import smart_open, smart_write
+from anystore.util import clean_dict
 from pydantic import BaseModel
 from rich.console import Console
 
@@ -14,6 +15,7 @@ from leakrfc.exceptions import ImproperlyConfigured
 from leakrfc.export import export_dataset
 from leakrfc.logging import configure_logging
 from leakrfc.make import make_dataset
+from leakrfc.model import DatasetModel
 from leakrfc.settings import ArchiveSettings, Settings
 from leakrfc.sync.aleph import sync_to_aleph
 from leakrfc.sync.memorious import (
@@ -102,6 +104,33 @@ def cli_config():
         write_obj(dataset, "-")
 
 
+@cli.command("catalog")
+def cli_catalog(
+    out_uri: Annotated[str, typer.Option("-o")] = "-",
+    collect_stats: Annotated[
+        bool, typer.Option(help="Collect document statistics")
+    ] = False,
+    names_only: Annotated[
+        bool, typer.Option(help="Only show dataset names (`foreign_id`)")
+    ] = False,
+):
+    """
+    Show catalog for all existing datasets
+    """
+    with ErrorHandler():
+        archive = configure_archive()
+        if names_only:
+            datasets = set()
+            for dataset in archive.get_datasets():
+                datasets.add(dataset.name)
+            data = "\n".join(sorted(datasets))
+            smart_write(out_uri, data.encode() + b"\n")
+        else:
+            catalog = archive.make_catalog(collect_stats=collect_stats)
+            data = clean_dict(catalog.model_dump(mode="json"))
+            smart_write(out_uri, orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE))
+
+
 @cli.command("make")
 def cli_make(
     out_uri: Annotated[str, typer.Option("-o")] = "-",
@@ -112,13 +141,25 @@ def cli_make(
     cleanup: Annotated[
         Optional[bool], typer.Option(help="Cleanup (delete) unreferenced metadata")
     ] = True,
+    metadata_only: Annotated[
+        Optional[bool], typer.Option(help="Check document metadata only")
+    ] = False,
+    dataset_metadata_only: Annotated[
+        Optional[bool], typer.Option(help="Compute dataset metadata only")
+    ] = False,
 ):
     """
     Make or update a leakrfc dataset and check integrity
     """
     with Dataset() as dataset:
-        res = make_dataset(dataset, use_cache, check_integrity, cleanup)
-        write_obj(res, out_uri)
+        if dataset_metadata_only:
+            dataset.make_index()
+            obj = dataset._storage.get(dataset._get_index_path(), model=DatasetModel)
+        else:
+            obj = make_dataset(
+                dataset, use_cache, check_integrity, cleanup, metadata_only
+            )
+        write_obj(obj, out_uri)
 
 
 @cli.command("get")

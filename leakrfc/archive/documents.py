@@ -9,6 +9,7 @@ import typing
 from functools import cached_property
 
 import pandas as pd
+from ftmq.types import CEGenerator
 
 from leakrfc.archive.cache import get_cache
 from leakrfc.logging import get_logger
@@ -35,14 +36,26 @@ class Documents:
         for ix, row in enumerate(self.dataset._storage.stream(self.csv_path, mode="r")):
             if ix:
                 yield Document.from_csv(row, self.dataset.name)
+                if ix % 1_000 == 0:
+                    log.info(
+                        f"Loaded {ix} documents ...",
+                        dataset=self.dataset.name,
+                        storage=self.dataset._storage.uri,
+                    )
+
+    def iter_entities(self) -> CEGenerator:
+        for ix, document in enumerate(self, 1):
+            yield document.to_proxy()
+            if ix % 1_000 == 0:
+                log.info(
+                    f"Loaded {ix} entities ...",
+                    dataset=self.dataset.name,
+                    storage=self.dataset._storage.uri,
+                )
 
     @cached_property
     def db(self) -> pd.DataFrame:
-        try:
-            with self.dataset._storage.open(self.csv_path) as io:
-                return pd.read_csv(io)
-        except Exception:
-            return pd.DataFrame(columns=self.HEADER)
+        return self.get_db()
 
     def build_reversed(self) -> None:
         # build reversed hash -> key index
@@ -88,3 +101,14 @@ class Documents:
     def get_key_for_content_hash(self, ch: str) -> str:
         self.build_reversed()
         return self.cache.get(f"{self.ix_prefix}/{ch}")
+
+    def get_db(self) -> pd.DataFrame:
+        try:
+            with self.dataset._storage.open(self.csv_path) as io:
+                return pd.read_csv(io)
+        except Exception:
+            return pd.DataFrame(columns=self.HEADER)
+
+    def get_total_size(self) -> int:
+        df = self.get_db()
+        return int(df["size"].sum())

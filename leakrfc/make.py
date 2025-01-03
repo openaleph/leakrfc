@@ -40,19 +40,22 @@ class MakeWorker(DatasetWorker):
         self,
         check_integrity: bool | None = True,
         cleanup: bool | None = True,
+        metadata_only: bool | None = False,
         *args,
         **kwargs,
     ) -> None:
         kwargs["status_model"] = kwargs.get("status_model", MakeStatus)
         super().__init__(*args, **kwargs)
-        self.check_integrity = check_integrity
+        self.check_integrity = check_integrity if not metadata_only else False
         self.cleanup = cleanup
+        self.metadata_only = metadata_only
 
     def get_tasks(self) -> Generator[Task, None, None]:
-        self.log_info("Checking source files ...")
-        for key in self.dataset.iter_keys():
-            self.count(files_total=1)
-            yield key, ACTION_SOURCE
+        if not self.metadata_only:
+            self.log_info("Checking source files ...")
+            for key in self.dataset.iter_keys():
+                self.count(files_total=1)
+                yield key, ACTION_SOURCE
         self.log_info("Checking existing files ...")
         for file in self.dataset.iter_files(use_db=False):
             self.count(metadata_total=1)
@@ -90,12 +93,22 @@ class MakeWorker(DatasetWorker):
                         self.log_info(f"Fixing checksum for `{key}` ...")
                         file.content_hash = content_hash
                         self.dataset._put_file_info(file)
+                self.dataset.documents.put(file.to_document())
             except DoesNotExist:
                 self.log_error(f"Source file `{key}` does not exist")
                 self.count(files_deleted=1)
                 if self.cleanup:
                     self.log_info(f"Deleting metadata for `{key}` ...")
                     self.dataset.delete_file(key)
+        else:
+            # still rebuild documents database
+            file = self.dataset.lookup_file(key)
+            self.dataset.documents.put(file.to_document())
+
+    def done(self) -> None:
+        self.dataset.documents.write()
+        self.dataset.make_index()
+        self.dataset.make_size()
 
 
 def make_dataset(
@@ -103,6 +116,9 @@ def make_dataset(
     use_cache: bool | None = True,
     check_integrity: bool | None = True,
     cleanup: bool | None = True,
+    metadata_only: bool | None = False,
 ) -> MakeStatus:
-    worker = MakeWorker(check_integrity, cleanup, dataset, use_cache=use_cache)
+    worker = MakeWorker(
+        check_integrity, cleanup, metadata_only, dataset, use_cache=use_cache
+    )
     return worker.run()
