@@ -6,16 +6,19 @@ from datetime import datetime
 from fnmatch import fnmatch
 from typing import Generator
 
+import aiohttp
 from anystore import anycache, get_store
 from anystore.store import BaseStore
 from anystore.types import Uri
 from anystore.util import rm_rf
 from anystore.worker import WorkerStatus
+from banal import ensure_dict
 
 from leakrfc.archive import DatasetArchive
 from leakrfc.archive.cache import get_cache
 from leakrfc.extract import handle_extract, is_archive
 from leakrfc.logging import get_logger
+from leakrfc.model import ORIGIN_EXTRACTED, ORIGIN_ORIGINAL, File, Origins
 from leakrfc.worker import DatasetWorker, make_cache_key
 
 log = get_logger(__name__)
@@ -42,6 +45,8 @@ class CrawlWorker(DatasetWorker):
         write_documents_db: bool | None = False,
         exclude: str | None = None,
         include: str | None = None,
+        origin: Origins | None = ORIGIN_ORIGINAL,
+        source_file: File | None = None,
         **kwargs,
     ) -> None:
         kwargs["status_model"] = kwargs.get("status_model", CrawlStatus)
@@ -54,6 +59,8 @@ class CrawlWorker(DatasetWorker):
         self.write_documents_db = write_documents_db
         self.exclude = exclude
         self.include = include
+        self.origin = origin or ORIGIN_ORIGINAL
+        self.source_file = source_file
 
     def get_tasks(self) -> Generator[str, None, None]:
         self.log_info(f"Crawling `{self.remote.uri}` ...")
@@ -74,15 +81,25 @@ class CrawlWorker(DatasetWorker):
                 f"Skipping already existing `{task}` ...", remote=self.remote.uri
             )
             return now
-        self.log_info(f"Crawling `{task}` ...", remote=self.remote.uri)
+        self.log_info(
+            f"Crawling `{task}` ...",
+            remote=self.remote.uri,
+            origin=self.origin,
+            source=self.source_file.key if self.source_file else None,
+        )
         with self.local_file(task, self.remote) as file:
+            file.origin = self.origin
+            if self.source_file:
+                file.source_file = self.source_file.key
             if self.extract and is_archive(file):
                 self.count(packages=1)
                 out = handle_extract(
                     file, self.extract_keep_source, self.extract_ensure_subdir
                 )
                 if out is not None:
-                    res = self.crawl_child(out)
+                    res = self.crawl_child(
+                        out, origin=ORIGIN_EXTRACTED, source_file=file
+                    )
                     self.count(extracted=res.done)
                     self.count(errors=res.errors)
                     rm_rf(out)
@@ -92,7 +109,12 @@ class CrawlWorker(DatasetWorker):
                 self.dataset.archive_file(file)
         return now
 
-    def crawl_child(self, uri: Uri) -> CrawlStatus:
+    def crawl_child(
+        self,
+        uri: Uri,
+        origin: Origins | None = ORIGIN_ORIGINAL,
+        source_file: File | None = None,
+    ) -> CrawlStatus:
         return crawl(
             uri,
             storage=self.dataset,
@@ -100,6 +122,8 @@ class CrawlWorker(DatasetWorker):
             extract=self.extract,
             extract_keep_source=self.extract_keep_source,
             write_documents_db=False,
+            origin=origin,
+            source_file=source_file,
         )
 
     def done(self) -> None:
@@ -121,8 +145,18 @@ def crawl(
     write_documents_db: bool | None = True,
     exclude: str | None = None,
     include: str | None = None,
+    origin: Origins | None = ORIGIN_ORIGINAL,
+    source_file: File | None = None,
 ) -> CrawlStatus:
-    remote_store = get_store(uri=uri, serialization_mode="raw")
+    remote_store = get_store(uri=uri)
+    # FIXME ensure long timeouts
+    if remote_store.scheme.startswith("http"):
+        backend_config = ensure_dict(remote_store.backend_config)
+        backend_config["client_kwargs"] = {
+            **ensure_dict(backend_config.get("client_kwargs")),
+            "timeout": aiohttp.ClientTimeout(total=3600 * 24),
+        }
+        remote_store.backend_config = backend_config
     worker = CrawlWorker(
         remote_store,
         dataset=storage,
@@ -134,5 +168,7 @@ def crawl(
         write_documents_db=write_documents_db,
         exclude=exclude,
         include=include,
+        origin=origin,
+        source_file=source_file,
     )
     return worker.run()

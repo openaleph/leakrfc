@@ -11,7 +11,7 @@ from anystore.io import Uri
 from anystore.store.virtual import get_virtual
 
 from leakrfc.logging import get_logger
-from leakrfc.model import OriginalFile
+from leakrfc.model import File
 
 log = get_logger(__name__)
 
@@ -20,12 +20,12 @@ def extract_archive(source: Uri, temp_dir: Path, **kwargs: Any) -> None:
     patoolib.extract_archive(str(source), outdir=str(temp_dir), **kwargs)
 
 
-def is_archive(file: OriginalFile) -> bool:
+def is_archive(file: File) -> bool:
     return patoolib.is_archive(file.uri)
 
 
 def handle_extract(
-    file: OriginalFile,
+    file: File,
     keep_source: bool | None = False,
     ensure_subdir: bool | None = False,
 ) -> str | None:

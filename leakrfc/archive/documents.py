@@ -34,7 +34,7 @@ class Documents:
 
     def __iter__(self) -> Docs:
         for ix, row in enumerate(self.dataset._storage.stream(self.csv_path, mode="r")):
-            if ix:
+            if ix:  # skip header
                 yield Document.from_csv(row, self.dataset.name)
                 if ix % 1_000 == 0:
                     log.info(
@@ -68,6 +68,7 @@ class Documents:
         )
         for doc in self:
             self.cache.put(f"{self.ix_prefix}/{doc.content_hash}", doc.key)
+        self._build_reversed = True
 
     def put(self, doc: Document) -> None:
         self.cache.put(f"{self.prefix}/{doc.key}", doc.to_csv())

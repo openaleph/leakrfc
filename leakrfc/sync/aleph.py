@@ -13,7 +13,7 @@ from anystore.worker import WorkerStatus
 from leakrfc.archive.cache import get_cache
 from leakrfc.archive.dataset import DatasetArchive
 from leakrfc.connectors import aleph
-from leakrfc.model import OriginalFile
+from leakrfc.model import File
 from leakrfc.worker import DatasetWorker, make_cache_key
 
 
@@ -23,7 +23,7 @@ def _make_cache_key(self: "AlephUploadWorker", *parts: str) -> str:
     return make_cache_key(self, "sync", "aleph", host, *parts)
 
 
-def get_upload_cache_key(self: "AlephUploadWorker", file: OriginalFile) -> str | None:
+def get_upload_cache_key(self: "AlephUploadWorker", file: File) -> str | None:
     if self.use_cache:
         return _make_cache_key(self, file.key)
 
@@ -89,7 +89,7 @@ class AlephUploadWorker(DatasetWorker):
         return parent
 
     @anycache(store=get_cache(), key_func=get_upload_cache_key)
-    def handle_task(self, task: OriginalFile) -> dict[str, Any]:
+    def handle_task(self, task: File) -> dict[str, Any]:
         res = {
             "uploaded_at": datetime.now().isoformat(),
             "dataset": self.dataset.name,

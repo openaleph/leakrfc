@@ -6,7 +6,7 @@ from anystore.store.virtual import get_virtual
 from anystore.worker import Worker
 
 from leakrfc.logging import get_logger
-from leakrfc.model import OriginalFile
+from leakrfc.model import File
 from leakrfc.settings import Settings
 
 if TYPE_CHECKING:
@@ -68,7 +68,7 @@ class DatasetWorker(Worker):
     @contextlib.contextmanager
     def local_file(self, uri: str, store: BaseStore | None):
         """
-        Get a `OriginalFile` instance pointing to a file in the local
+        Get a `File` instance pointing to a file in the local
         filesystem.
 
         If the source is local as well, use the actual file. If the source is
@@ -85,9 +85,7 @@ class DatasetWorker(Worker):
             key = tmp.download(uri, store)
             content_hash = tmp.store.checksum(key)
             info = tmp.store.info(key)
-        file = OriginalFile.from_info(
-            info, self.dataset.name, content_hash=content_hash
-        )
+        file = File.from_info(info, self.dataset.name, content_hash=content_hash)
         # file.name = name_from_uri(uri)
         try:
             yield file

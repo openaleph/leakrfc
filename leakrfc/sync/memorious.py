@@ -22,7 +22,7 @@ from anystore.worker import WorkerStatus
 from leakrfc.archive import DatasetArchive
 from leakrfc.archive.cache import get_cache
 from leakrfc.logging import get_logger
-from leakrfc.model import OriginalFile
+from leakrfc.model import File
 from leakrfc.util import render
 from leakrfc.worker import DatasetWorker, make_cache_key
 
@@ -73,7 +73,7 @@ class MemoriousWorker(DatasetWorker):
                 self.count(skipped=1)
         return now
 
-    def load_memorious(self, key: str) -> OriginalFile | None:
+    def load_memorious(self, key: str) -> File | None:
         data = self.memorious.get(key, serialization_mode="json")
         content_hash = data.pop("content_hash", None)
         if content_hash is None:
@@ -85,7 +85,7 @@ class MemoriousWorker(DatasetWorker):
         else:
             key = self.key_func(data)
             info = self.memorious.info(data["_file_name"])
-            return OriginalFile(
+            return File(
                 key=key.strip("/"),
                 name=Path(key).name,
                 size=info.size,

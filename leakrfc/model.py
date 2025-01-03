@@ -1,7 +1,7 @@
 import csv
 from datetime import datetime
 from io import StringIO
-from typing import Any, ClassVar, Generator, Self, TypeAlias
+from typing import Any, Generator, Literal, Self, TypeAlias
 
 from anystore.mixins import BaseModel
 from anystore.model import StoreModel
@@ -21,6 +21,8 @@ from leakrfc.util import guess_mimetype, mime_to_schema
 ORIGIN_ORIGINAL = "original"
 ORIGIN_EXTRACTED = "extracted"
 ORIGIN_CONVERTED = "converted"
+
+Origins: TypeAlias = Literal["original", "extracted", "converted"]
 
 
 class ArchiveModel(BaseModel):
@@ -59,6 +61,8 @@ class File(Stats, AbstractFileModel):
     content_hash: str
     mimetype: str | None = None
     processed: datetime | None = None
+    origin: Origins = ORIGIN_ORIGINAL
+    source_file: str | None = None
     extra: dict[str, Any] = {}
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
@@ -101,20 +105,6 @@ class File(Stats, AbstractFileModel):
     def ensure_updated_at(self):
         self.updated_at = self.updated_at or self.created_at
         return self
-
-
-class OriginalFile(File):
-    origin: ClassVar = ORIGIN_ORIGINAL
-
-
-class ExtractedFile(File):
-    origin: ClassVar = ORIGIN_EXTRACTED
-    archive: str
-
-
-class ConvertedFile(File):
-    origin: ClassVar = ORIGIN_CONVERTED
-    root: str
 
 
 class Document(BaseModel, AbstractFileModel):
@@ -168,6 +158,5 @@ class Document(BaseModel, AbstractFileModel):
         return cls(**file.model_dump())
 
 
-OriginalFiles: TypeAlias = Generator[OriginalFile, None, None]
 Files: TypeAlias = Generator[File, None, None]
 Docs: TypeAlias = Generator[Document, None, None]

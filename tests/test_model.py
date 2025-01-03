@@ -4,22 +4,14 @@ from ftmq.model import Dataset
 from nomenklatura.dataset import DefaultDataset
 from rigour.mime.types import PLAIN
 
-from leakrfc.model import (
-    ORIGIN_CONVERTED,
-    ORIGIN_EXTRACTED,
-    ORIGIN_ORIGINAL,
-    ConvertedFile,
-    DatasetModel,
-    ExtractedFile,
-    OriginalFile,
-)
+from leakrfc.model import ORIGIN_ORIGINAL, DatasetModel, File
 
 
 def test_model():
     uri = "http://localhost:8000/src/utf.txt"
     file_id = "default-file-2928064cd9a743af30b720634dcffacdd84de23d"
 
-    file = OriginalFile.from_uri(uri, content_hash="ch-root")
+    file = File.from_uri(uri, content_hash="ch-root")
     assert file.origin == ORIGIN_ORIGINAL == "original"
     assert file.name == "utf.txt"
     assert file.mimetype == PLAIN
@@ -32,20 +24,6 @@ def test_model():
     assert proxy.id == file.id
     assert proxy.dataset.name == file.dataset
     assert proxy.first("fileName") == file.name
-
-    # file processing stages
-
-    extracted = ExtractedFile.from_uri(uri, archive=file.id, content_hash="ch-ex")
-    assert extracted.origin == ORIGIN_EXTRACTED == "extracted"
-    assert extracted.archive == file_id
-    data = extracted.model_dump()
-    assert data["origin"] == ORIGIN_EXTRACTED
-
-    converted = ConvertedFile.from_uri(uri, root=file.id, content_hash="ch-cv")
-    assert converted.origin == ORIGIN_CONVERTED == "converted"
-    assert converted.root == file_id
-    data = converted.model_dump()
-    assert data["origin"] == ORIGIN_CONVERTED
 
     # documents
 

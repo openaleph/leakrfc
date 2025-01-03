@@ -1,5 +1,6 @@
 from leakrfc.archive import get_dataset
 from leakrfc.crawl import crawl
+from leakrfc.model import ORIGIN_EXTRACTED
 
 
 def test_crawl(tmp_path, fixtures_path):
@@ -40,7 +41,13 @@ def test_crawl_extract(tmp_path, fixtures_path):
     assert res.packages == 4
     assert res.done == 74
     assert dataset.exists("tests/fixtures/500 pages.pdf")
+    file = dataset.lookup_file("tests/fixtures/500 pages.pdf")
+    assert file.origin == ORIGIN_EXTRACTED
+    assert file.source_file == "500_pages.7z"
     assert dataset.exists("testdir/test-documents/testPDF.pdf")
+    file = dataset.lookup_file("testdir/test-documents/testPDF.pdf")
+    assert file.origin == ORIGIN_EXTRACTED
+    assert file.source_file == "testdir/test-documents.rar"
 
     # ensure subdir
     dataset = get_dataset("test1", uri=tmp_path / "test1")
@@ -78,6 +85,7 @@ def test_crawl_extract_keep(tmp_path, fixtures_path):
         dataset,
         extract=True,
         extract_keep_source=True,
+        extract_ensure_subdir=True,
         use_cache=False,
     )
     assert res.extracted == 28
