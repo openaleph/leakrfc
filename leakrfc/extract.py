@@ -24,16 +24,26 @@ def is_archive(file: OriginalFile) -> bool:
     return patoolib.is_archive(file.uri)
 
 
-def handle_extract(file: OriginalFile, keep_source: bool | None = False) -> str | None:
+def handle_extract(
+    file: OriginalFile,
+    keep_source: bool | None = False,
+    ensure_subdir: bool | None = False,
+) -> str | None:
+    if not file.is_local:
+        raise ValueError(f"File `{file.uri}` is not a local accessible file.")
     uri = file.uri[7:]
     try:
         with get_virtual("leakrfc-extract-", keep=True) as tmp:
+            path = Path(file.key).parent
             if keep_source:
-                out = Path(tmp.path) / "/".join(map(str, Path(file.key).parents))
-                out /= f"__extracted__/{file.name}"
-            else:
+                out = Path(tmp.path) / path
+                if ensure_subdir:
+                    out /= f"__extracted__/{file.name}"
+            elif ensure_subdir:  # use package name as subdir for extracted members
                 out = Path(tmp.path) / file.key
-            out.mkdir(parents=True)
+            else:
+                out = Path(tmp.path) / path
+            out.mkdir(parents=True, exist_ok=True)
             extract_archive(uri, out, interactive=False)
             return tmp.path
     except Exception as e:

@@ -38,6 +38,7 @@ class CrawlWorker(DatasetWorker):
         skip_existing: bool | None = True,
         extract: bool | None = False,
         extract_keep_source: bool | None = False,
+        extract_ensure_subdir: bool | None = False,
         write_documents_db: bool | None = False,
         exclude: str | None = None,
         include: str | None = None,
@@ -49,6 +50,7 @@ class CrawlWorker(DatasetWorker):
         self.skip_existing = skip_existing
         self.extract = extract
         self.extract_keep_source = extract_keep_source
+        self.extract_ensure_subdir = extract_ensure_subdir
         self.write_documents_db = write_documents_db
         self.exclude = exclude
         self.include = include
@@ -76,7 +78,9 @@ class CrawlWorker(DatasetWorker):
         with self.local_file(task, self.remote) as file:
             if self.extract and is_archive(file):
                 self.count(packages=1)
-                out = handle_extract(file, self.extract_keep_source)
+                out = handle_extract(
+                    file, self.extract_keep_source, self.extract_ensure_subdir
+                )
                 if out is not None:
                     res = self.crawl_child(out)
                     self.count(extracted=res.done)
@@ -101,6 +105,8 @@ class CrawlWorker(DatasetWorker):
     def done(self) -> None:
         if self.write_documents_db:
             documents = self.dataset.documents.write()
+            self.dataset.make_index()
+            self.dataset.make_size()
             self.log_info(f"Crawling `{self.remote.uri}`: Done.", documents=documents)
 
 
@@ -110,6 +116,7 @@ def crawl(
     skip_existing: bool | None = True,
     extract: bool | None = False,
     extract_keep_source: bool | None = False,
+    extract_ensure_subdir: bool | None = False,
     use_cache: bool | None = True,
     write_documents_db: bool | None = True,
     exclude: str | None = None,
@@ -122,6 +129,7 @@ def crawl(
         skip_existing=skip_existing,
         extract=extract,
         extract_keep_source=extract_keep_source,
+        extract_ensure_subdir=extract_ensure_subdir,
         use_cache=use_cache,
         write_documents_db=write_documents_db,
         exclude=exclude,

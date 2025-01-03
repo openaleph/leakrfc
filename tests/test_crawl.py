@@ -28,8 +28,29 @@ def test_crawl(tmp_path, fixtures_path):
 
 
 def test_crawl_extract(tmp_path, fixtures_path):
-    dataset = get_dataset("test", uri=tmp_path / "test1")
-    res = crawl(fixtures_path / "src", dataset, extract=True, use_cache=False)
+    # default
+    dataset = get_dataset("test0", uri=tmp_path / "test0")
+    res = crawl(
+        fixtures_path / "src",
+        dataset,
+        extract=True,
+        use_cache=False,
+    )
+    assert res.extracted == 28
+    assert res.packages == 4
+    assert res.done == 74
+    assert dataset.exists("tests/fixtures/500 pages.pdf")
+    assert dataset.exists("testdir/test-documents/testPDF.pdf")
+
+    # ensure subdir
+    dataset = get_dataset("test1", uri=tmp_path / "test1")
+    res = crawl(
+        fixtures_path / "src",
+        dataset,
+        extract=True,
+        extract_ensure_subdir=True,
+        use_cache=False,
+    )
     assert res.extracted == 28
     assert res.packages == 4
     assert res.extracted + res.done - res.packages == len(
@@ -40,7 +61,7 @@ def test_crawl_extract(tmp_path, fixtures_path):
 
     url = "http://localhost:8000/src"
     dataset = get_dataset("test2", uri=tmp_path / "test2")
-    res = crawl(url, dataset, extract=True, use_cache=False)
+    res = crawl(url, dataset, extract=True, extract_ensure_subdir=True, use_cache=False)
     assert res.extracted == 28
     assert res.packages == 4
     assert res.extracted + res.done - res.packages == len(
@@ -51,7 +72,7 @@ def test_crawl_extract(tmp_path, fixtures_path):
 
 
 def test_crawl_extract_keep(tmp_path, fixtures_path):
-    dataset = get_dataset("test", uri=tmp_path / "test1")
+    dataset = get_dataset("test1", uri=tmp_path / "test1")
     res = crawl(
         fixtures_path / "src",
         dataset,
@@ -74,6 +95,7 @@ def test_crawl_extract_keep(tmp_path, fixtures_path):
         dataset,
         extract=True,
         extract_keep_source=True,
+        extract_ensure_subdir=True,
         use_cache=False,
     )
     assert res.extracted == 28

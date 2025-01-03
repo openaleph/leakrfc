@@ -230,6 +230,12 @@ def cli_crawl(
     extract_keep_source: Annotated[
         Optional[bool], typer.Option(help="Keep the source archive when extracting")
     ] = False,
+    extract_ensure_subdir: Annotated[
+        Optional[bool],
+        typer.Option(
+            help="Ensure a subdirectory with the package filename when extracting"
+        ),
+    ] = False,
     exclude: Annotated[
         Optional[str], typer.Option(help="Exclude paths glob pattern")
     ] = None,
@@ -249,6 +255,7 @@ def cli_crawl(
                 skip_existing=skip_existing,
                 extract=extract,
                 extract_keep_source=extract_keep_source,
+                extract_ensure_subdir=extract_ensure_subdir,
                 exclude=exclude,
                 include=include,
             ),
