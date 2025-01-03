@@ -5,8 +5,11 @@ from typing import Any
 
 from alephclient.api import AlephAPI
 from alephclient.settings import API_KEY, HOST
+from anystore.util import clean_dict
+from banal import ensure_list
 
 from leakrfc.logging import get_logger
+from leakrfc.model import DatasetModel
 
 log = get_logger(__name__)
 
@@ -69,3 +72,29 @@ def make_folders(path: str, collection_id: str, parent: str | None = None) -> st
         metadata["parent"] = {"id": parent}
     res = api.ingest_upload(collection_id, metadata=metadata)
     return res["id"]
+
+
+def update_collection_metadata(
+    foreign_id: str, dataset: DatasetModel
+) -> dict[str, Any]:
+    data = clean_dict(dataset.model_dump(mode="json"))
+    publisher = {}
+    if dataset.publisher:
+        publisher = clean_dict(dataset.publisher.model_dump(mode="json"))
+    description = data.get("description") or ""
+    summary = data.get("summary") or ""
+    summary = (description + "\n\n" + summary).strip()
+    data = {
+        "label": dataset.title,
+        "summary": summary,
+        "publisher": publisher.get("name"),
+        "publisher_url": publisher.get("url"),
+        "countries": ensure_list(publisher.get("country")),
+        "data_url": data.get("data_url"),
+        "category": data.get("category") or "other",
+    }
+    if dataset.coverage and dataset.coverage.frequency:
+        data["frequency"] = dataset.coverage.frequency
+    collection_id = get_or_create_collection_id(foreign_id)
+    api = get_api()
+    return api.update_collection(collection_id, data)

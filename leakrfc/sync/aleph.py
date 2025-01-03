@@ -8,7 +8,6 @@ from typing import Any
 from urllib.parse import urlparse
 
 from anystore import anycache
-from anystore.store.virtual import get_virtual
 from anystore.worker import WorkerStatus
 
 from leakrfc.archive.cache import get_cache
@@ -59,7 +58,6 @@ class AlephUploadWorker(DatasetWorker):
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
-        self.tmp = get_virtual(f"leakrfc-{self.dataset.name}-")
         self.api = aleph.get_api(host, api_key)
         self.host = aleph.get_host(self.api)
         self.foreign_id = foreign_id or self.dataset.name
@@ -68,6 +66,13 @@ class AlephUploadWorker(DatasetWorker):
         )
         self.prefix = prefix
         self.consumer_threads = min(10, self.consumer_threads)  # urllib connection pool
+
+        self.log_info(
+            "Updating collection metadata ...",
+            aleph=self.host,
+            foreign_id=self.foreign_id,
+        )
+        aleph.update_collection_metadata(self.dataset.name, self.dataset.config)
 
     @anycache(store=get_cache(), key_func=get_parent_cache_key)
     def get_parent(self, key: str, prefix: str | None = None) -> dict[str, str] | None:
@@ -100,16 +105,13 @@ class AlephUploadWorker(DatasetWorker):
         parent = self.get_parent(task.key, self.prefix)
         if parent:
             metadata["parent"] = parent
-        tmp_key = self.tmp.download(
-            self.dataset._make_path(task.key), self.dataset._storage
-        )
-        tmp_path = urlparse(self.tmp.store.get_key(tmp_key)).path
-        res.update(
-            self.api.ingest_upload(
-                self.collection_id, Path(tmp_path), metadata=metadata
+        with self.local_file(task.key, self.dataset._storage) as file:
+            tmp_path = urlparse(file.uri).path
+            res.update(
+                self.api.ingest_upload(
+                    self.collection_id, Path(tmp_path), metadata=metadata
+                )
             )
-        )
-        self.tmp.cleanup(tmp_key)
         self.log_info(
             f"Upload complete. Aleph id: `{res['id']}`",
             content_hash=task.content_hash,
@@ -121,7 +123,6 @@ class AlephUploadWorker(DatasetWorker):
         return res
 
     def done(self) -> None:
-        self.tmp.cleanup()
         self.log_info("Syncing to Aleph: Done")
 
 
