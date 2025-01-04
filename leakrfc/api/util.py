@@ -1,4 +1,3 @@
-from anystore import anycache
 from anystore.store.fs import DoesNotExist
 from anystore.util import clean_dict
 from fastapi import HTTPException
@@ -7,7 +6,6 @@ from pydantic import BaseModel
 
 from leakrfc import __version__
 from leakrfc.archive import archive
-from leakrfc.archive.cache import get_cache
 from leakrfc.logging import get_logger
 from leakrfc.model import File
 from leakrfc.settings import Settings
@@ -62,8 +60,7 @@ class Errors:
                 raise exc
 
 
-@anycache(store=get_cache(), key_func=lambda d, k: f"api/file/{d}/{k}", model=File)
-def get_file_info(dataset: str, key: str) -> File | None:
+def get_file_info(dataset: str, key: str) -> File:
     storage = archive.get_dataset(dataset)
     return storage.lookup_file_by_content_hash(key)
 
