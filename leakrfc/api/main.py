@@ -38,6 +38,7 @@ log.info(f"Archive: `{archive._storage.uri}`")
 
 
 if settings.debug:
+    log.warning("Api is running in debug mode!")
 
     @app.get("/{dataset}/{key}/token")
     async def get_token(
