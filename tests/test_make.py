@@ -11,7 +11,7 @@ def test_make(fixtures_path, tmp_path):
     assert res.integrity_errors == 0
 
     # delete a file info reference
-    dataset._storage.delete(".leakrfc/info/utf.txt/info.json")
+    dataset._storage.delete(".leakrfc/meta/utf.txt/info.json")
     res = make_dataset(dataset, use_cache=False)
     assert res.files_total == 74
     assert res.files_added == 1

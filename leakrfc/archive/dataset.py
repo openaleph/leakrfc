@@ -19,7 +19,7 @@ log = get_logger(__name__)
 
 INDEX = "index.json"
 CONFIG = "config.yml"
-INFO_PREFIX = "info"
+INFO_PREFIX = "meta"
 INFO = "info.json"
 TXT = "txt"
 ENTITIES_PREFIX = "entities"
