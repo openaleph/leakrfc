@@ -80,9 +80,9 @@ class MakeWorker(DatasetWorker):
         if self.check_integrity:
             self.count(files_checked=1)
             self.log_info(f"Testing checksum for `{key}` ...")
+            file = self.dataset.lookup_file(key)
             try:
                 content_hash = self.dataset.make_checksum(key)
-                file = self.dataset.lookup_file(key)
                 if content_hash != file.content_hash:
                     self.log_error(
                         f"Checksum mismatch for `{key}`: `{content_hash}`",
@@ -93,17 +93,18 @@ class MakeWorker(DatasetWorker):
                         self.log_info(f"Fixing checksum for `{key}` ...")
                         file.content_hash = content_hash
                         self.dataset._put_file_info(file)
-                self.dataset.documents.put(file.to_document())
+                self.dataset.documents.add(file.to_document())
             except DoesNotExist:
                 self.log_error(f"Source file `{key}` does not exist")
                 self.count(files_deleted=1)
                 if self.cleanup:
                     self.log_info(f"Deleting metadata for `{key}` ...")
                     self.dataset.delete_file(key)
+                    self.dataset.documents.delete(file.to_document())
         else:
-            # still rebuild documents database
+            # still (re)build documents database
             file = self.dataset.lookup_file(key)
-            self.dataset.documents.put(file.to_document())
+            self.dataset.documents.add(file.to_document())
 
     def done(self) -> None:
         self.dataset.documents.write()

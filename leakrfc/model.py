@@ -1,6 +1,4 @@
-import csv
 from datetime import datetime
-from io import StringIO
 from typing import Any, Generator, Literal, Self, TypeAlias
 
 from anystore.mixins import BaseModel
@@ -116,32 +114,9 @@ class Document(BaseModel, AbstractFileModel):
     created_at: datetime
     updated_at: datetime
 
-    def to_csv(self) -> str:
-        io = StringIO()
-        writer = csv.writer(io)
-        writer.writerow(
-            (
-                self.key,
-                self.content_hash,
-                self.size,
-                self.mimetype,
-                self.created_at.isoformat(),
-                self.updated_at.isoformat(),
-            )
-        )
-        return io.getvalue().strip()
-
     @property
     def name(self) -> str:
         return name_from_uri(self.key)
-
-    @classmethod
-    def from_csv(cls, line: str, dataset: str) -> Self:
-        io = StringIO(line)
-        for row in csv.reader(io):
-            data = dict(zip(cls.model_fields.keys(), [None, *row]))
-            data["dataset"] = dataset
-            return cls(**data)
 
     @field_validator("created_at", mode="before")
     @classmethod

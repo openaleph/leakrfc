@@ -26,7 +26,6 @@ def test_model():
     assert proxy.first("fileName") == file.name
 
     # documents
-
     doc = file.to_document()
     assert doc.key == file.key
     assert doc.content_hash == file.content_hash
@@ -36,13 +35,6 @@ def test_model():
     assert doc.created_at < datetime.now()
     assert doc.updated_at < datetime.now()
     assert doc.created_at <= doc.updated_at
-    assert doc.to_csv().startswith("utf.txt,ch-root,19,text/plain")
-
-    doc = doc.from_csv(doc.to_csv(), "test_dataset")
-    assert doc.key == file.key
-    assert doc.content_hash == file.content_hash
-    assert doc.size == file.size
-    assert doc.to_csv().startswith("utf.txt,ch-root,19,text/plain")
 
 
 def test_model_dataset(fixtures_path):

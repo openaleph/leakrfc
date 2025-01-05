@@ -19,7 +19,7 @@ settings = Settings()
 
 
 def make_cache_key(worker: "DatasetWorker", action: str, *extra: str) -> str:
-    return f"{worker.dataset.name}/{action}/{'/'.join(extra)}".lower()
+    return f"{worker.dataset.name}/{action}/{'/'.join(extra)}"
 
 
 class DatasetWorker(Worker):

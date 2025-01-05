@@ -163,7 +163,7 @@ class DatasetArchive(ReadOnlyDatasetArchive):
     def _put_file_info(self, file):
         # store file metadata in storage and cache
         self._storage.put(self._get_file_info_path(file.key), file, model=File)
-        self.documents.put(file.to_document())
+        self.documents.add(file.to_document())
 
     def make_config(self, data: DatasetModel | None = None) -> DatasetModel:
         uri = self._get_config_path()

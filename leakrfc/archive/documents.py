@@ -5,17 +5,21 @@ CSV format:
 key,content_hash,size,mimetype,created_at,updated_at
 """
 
-import typing
-from functools import cached_property
+import csv
+from datetime import datetime
+from difflib import unified_diff
+from io import StringIO
+from typing import TYPE_CHECKING, ContextManager, Literal, TextIO
 
 import pandas as pd
+from anystore.io import DoesNotExist, logged_io_items
 from ftmq.types import CEGenerator
 
 from leakrfc.archive.cache import get_cache
 from leakrfc.logging import get_logger
 from leakrfc.model import Docs, Document
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from leakrfc.archive import DatasetArchive
 
 log = get_logger(__name__)
@@ -33,29 +37,36 @@ class Documents:
         self._build_reversed = False
 
     def __iter__(self) -> Docs:
-        for ix, row in enumerate(self.dataset._storage.stream(self.csv_path, mode="r")):
-            if ix:  # skip header
-                yield Document.from_csv(row, self.dataset.name)
-                if ix % 1_000 == 0:
-                    log.info(
-                        f"Loaded {ix} documents ...",
-                        dataset=self.dataset.name,
-                        storage=self.dataset._storage.uri,
-                    )
+        yield from self.iter_documents()
+
+    def get_db(self) -> pd.DataFrame:
+        try:
+            with self.open() as fh:
+                return pd.read_csv(fh)
+        except DoesNotExist:
+            return pd.DataFrame(columns=self.HEADER)
+
+    def make_db(self, documents: Docs) -> pd.DataFrame:
+        df = pd.DataFrame(d.model_dump(exclude={"dataset"}) for d in documents)
+        if len(df):
+            return df
+        return pd.DataFrame(columns=self.HEADER)
+
+    def iter_documents(self) -> Docs:
+        df = self.get_db()
+        for _, row in logged_io_items(
+            df.iterrows(),
+            uri=self.dataset._get_documents_path(),
+            action="Load",
+            item_name="Document",
+        ):
+            data = dict(row)
+            data["dataset"] = self.dataset.name
+            yield Document(**data)
 
     def iter_entities(self) -> CEGenerator:
-        for ix, document in enumerate(self, 1):
+        for document in self.iter_documents():
             yield document.to_proxy()
-            if ix % 1_000 == 0:
-                log.info(
-                    f"Loaded {ix} entities ...",
-                    dataset=self.dataset.name,
-                    storage=self.dataset._storage.uri,
-                )
-
-    @cached_property
-    def db(self) -> pd.DataFrame:
-        return self.get_db()
 
     def build_reversed(self) -> None:
         # build reversed hash -> key index
@@ -66,50 +77,94 @@ class Documents:
             dataset=self.dataset.name,
             cache=self.cache.uri,
         )
-        for doc in self:
+        for doc in self.iter_documents():
             self.cache.put(f"{self.ix_prefix}/{doc.content_hash}", doc.key)
         self._build_reversed = True
 
-    def put(self, doc: Document) -> None:
-        self.cache.put(f"{self.prefix}/{doc.key}", doc.to_csv())
+    def add(self, doc: Document) -> None:
+        """Mark a document for addition /change"""
+        self.cache.put(f"{self.prefix}/add/{doc.key}", doc)
 
-    def write(self) -> int:
-        log.info("Writing documents ...", uri=self.csv_path)
-        df = self.get_merged()
-        with self.dataset._storage.open(self.csv_path, "wb") as o:
-            df.to_csv(o, index=False)
-        return len(df)
+    def delete(self, doc: Document) -> None:
+        """Mark a document for deletion"""
+        self.cache.put(f"{self.prefix}/del/{doc.key}", doc)
 
-    def get_merged(self) -> pd.DataFrame:
-        df = pd.DataFrame(d.model_dump(exclude={"dataset"}) for d in self.iter_cache())
-        if len(self.db):
-            df = pd.concat((self.db, df))
-        return df.drop_duplicates(subset=("key", "content_hash")).sort_values("key")
+    def write(self) -> None:
+        """Write out documents database to csv with diff file"""
+        log.info("Calculating diff ...", uri=self.csv_path)
+        now = datetime.now().isoformat()
+        current = self.get_db()
+        added = self.make_db(self.pop_cache("add"))
+        deleted = self.make_db(self.pop_cache("del"))
+        new = pd.concat((current, added))
+        new = new[~new["key"].isin(deleted["key"])]
+        new = new.sort_values(["key", "updated_at"]).drop_duplicates(
+            subset=["key"], keep="last"
+        )
+        log.info("Writing documents database ...", uri=self.csv_path)
 
-    def iter_cache(self) -> Docs:
-        for key in self.cache.iterate_keys(prefix=self.prefix):
-            value = self.cache.get(key, serialization_mode="raw")
-            yield Document.from_csv(value.decode(), self.dataset.name)
+        current_lines = self.make_lines(current)
+        new_lines = self.make_lines(new)
+        diff = list(
+            unified_diff(
+                current_lines,
+                new_lines,
+                fromfiledate=self.get_current_version(),
+                tofiledate=now,
+                n=0,
+            )
+        )
+        if len(diff):
+            # documents.csv.{timestamp}
+            with self.open("w", now) as f:
+                new.to_csv(f, index=False)
+            # documents.csv.{timestamp}.diff
+            with self.open("w", f"{now}.diff") as f:
+                for line in diff:
+                    f.write(line + "\n")
+        # documents.csv
+        with self.open("w") as f:
+            new.to_csv(f, index=False)
 
-    def iter_db(self) -> Docs:
-        for row in self.db.itertuples():
-            yield Document(dataset=self.dataset.name, **dict(row))
-
-    def iter_merged(self) -> Docs:
-        for _, row in self.get_merged():
-            yield Document(dataset=self.dataset.name, **dict(row))
+    def pop_cache(self, prefix: Literal["add", "del"]) -> Docs:
+        for key in self.cache.iterate_keys(prefix=f"{self.prefix}/{prefix}"):
+            data = self.cache.pop(key)
+            data["dataset"] = self.dataset.name
+            yield Document(**data)
 
     def get_key_for_content_hash(self, ch: str) -> str:
         self.build_reversed()
         return self.cache.get(f"{self.ix_prefix}/{ch}")
 
-    def get_db(self) -> pd.DataFrame:
-        try:
-            with self.dataset._storage.open(self.csv_path) as io:
-                return pd.read_csv(io)
-        except Exception:
-            return pd.DataFrame(columns=self.HEADER)
-
     def get_total_size(self) -> int:
         df = self.get_db()
         return int(df["size"].sum())
+
+    def make_lines(self, df: pd.DataFrame) -> list[str]:
+        lines: set[str] = set()
+        for _, row in df.iterrows():
+            io = StringIO()
+            writer = csv.DictWriter(io, self.HEADER)
+            writer.writerow(dict(row))
+            lines.add(io.getvalue().strip())
+        return list(sorted(lines))
+
+    def open(
+        self, mode: Literal["r", "w"] | None = "r", suffix: str | None = None
+    ) -> ContextManager[TextIO]:
+        key = self.dataset._get_documents_path(suffix=suffix)
+        return self.dataset._storage.open(key, mode=mode)
+
+    def get_versions(self) -> list[str]:
+        keys: list[str] = []
+        glob = self.dataset._make_path(self.dataset.metadata_prefix, "documents.*.diff")
+        for key in self.dataset._storage.iterate_keys(glob=glob):
+            ts = key[:-5].split("documents.csv.")[-1]
+            keys.append(ts)
+        return list(sorted(keys))
+
+    def get_current_version(self) -> str:
+        revs = self.get_versions()
+        if revs:
+            return revs[-1]
+        return ""
