@@ -31,6 +31,7 @@ class ArchiveSettings(BaseSettings):
     uri: str | None = None
     archive: ArchiveModel | None = None
     cache: StoreModel | None = None
+    cache_prefix: str = "leakrfc"
 
 
 class ApiContactSettings(BaseModel):

@@ -7,7 +7,7 @@ from anystore.worker import Worker
 
 from leakrfc.logging import get_logger
 from leakrfc.model import File
-from leakrfc.settings import Settings
+from leakrfc.settings import ArchiveSettings, Settings
 
 if TYPE_CHECKING:
     from leakrfc.archive.dataset import DatasetArchive
@@ -16,10 +16,13 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 settings = Settings()
+leakrfc_settings = ArchiveSettings()
 
 
-def make_cache_key(worker: "DatasetWorker", action: str, *extra: str) -> str:
-    return f"{worker.dataset.name}/{action}/{'/'.join(extra)}"
+def make_cache_key(worker: "DatasetWorker", action: str, *extra: str) -> str | None:
+    if not worker.use_cache:
+        return
+    return f"{leakrfc_settings.cache_prefix}/{worker.dataset.name}/{action}/{'/'.join(extra)}"
 
 
 class DatasetWorker(Worker):
@@ -77,14 +80,13 @@ class DatasetWorker(Worker):
         tmp = None
         if store is None:
             store, uri = get_store_for_uri(uri)
-        if store.is_local:
-            info = store.info(uri)
-            content_hash = store.checksum(uri)
-        else:
+        if not store.is_local:
             tmp = get_virtual()
-            key = tmp.download(uri, store)
-            content_hash = tmp.store.checksum(key)
-            info = tmp.store.info(key)
+            uri = tmp.download(uri, store)
+            store = tmp.store
+
+        info = store.info(uri)
+        content_hash = store.checksum(uri)
         file = File.from_info(info, self.dataset.name, content_hash=content_hash)
         # file.name = name_from_uri(uri)
         try:

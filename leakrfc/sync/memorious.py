@@ -30,8 +30,6 @@ log = get_logger(__name__)
 
 
 def get_cache_key(self: "MemoriousWorker", key: str) -> str | None:
-    if not self.use_cache:
-        return
     host = urlparse(self.memorious.uri).netloc
     if host is None:
         host = make_data_checksum(str(self.memorious.uri))

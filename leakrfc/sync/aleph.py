@@ -24,22 +24,28 @@ def _make_cache_key(self: "AlephUploadWorker", *parts: str) -> str:
 
 
 def get_upload_cache_key(self: "AlephUploadWorker", file: File) -> str | None:
-    if self.use_cache:
-        return _make_cache_key(self, file.key)
+    return _make_cache_key(self, file.key)
 
 
 def get_parent_cache_key(
     self: "AlephUploadWorker", key: str, prefix: str | None = None
 ) -> str | None:
-    if self.use_cache:
-        parts = [str(Path(key).parent)]
-        if prefix:
-            parts += prefix
-        return _make_cache_key(self, *parts)
+    parts = [str(Path(key).parent)]
+    if prefix:
+        parts += prefix
+    return _make_cache_key(self, *parts)
+
+
+def get_version_cache_key(self: "AlephUploadWorker", version: str) -> str | None:
+    return _make_cache_key(self, "versions", version)
+
+
+def get_current_version_cache_key(self: "AlephUploadWorker") -> str:
+    return self.dataset.documents.get_current_version()
 
 
 class AlephUploadStatus(WorkerStatus):
-    added: int = 0
+    uploaded: int = 0
     folders_created: int = 0
 
 
@@ -54,6 +60,7 @@ class AlephUploadWorker(DatasetWorker):
         api_key: str | None = None,
         prefix: str | None = None,
         foreign_id: str | None = None,
+        metadata: bool | None = True,
         *args,
         **kwargs,
     ) -> None:
@@ -65,14 +72,31 @@ class AlephUploadWorker(DatasetWorker):
             self.foreign_id, self.api
         )
         self.prefix = prefix
-        self.consumer_threads = min(10, self.consumer_threads)  # urllib connection pool
+        self.consumer_threads = min(10, self.consumer_threads)  # urllib pool limit
 
-        self.log_info(
-            "Updating collection metadata ...",
-            aleph=self.host,
-            foreign_id=self.foreign_id,
-        )
-        aleph.update_collection_metadata(self.dataset.name, self.dataset.config)
+        if metadata:
+            self.log_info(
+                "Updating collection metadata ...",
+                aleph=self.host,
+                foreign_id=self.foreign_id,
+            )
+            aleph.update_collection_metadata(self.dataset.name, self.dataset.config)
+
+    def get_tasks(self) -> Any:
+        for version in self.get_versions():
+            self.queue_tasks_from_version(version)
+        yield
+
+    @anycache(store=get_cache(), key_func=get_current_version_cache_key)
+    def get_versions(self) -> list[str]:
+        return self.dataset.documents.get_versions()
+
+    @anycache(store=get_cache(), key_func=get_version_cache_key)
+    def queue_tasks_from_version(self, version: str) -> datetime:
+        now = datetime.now()
+        for key in self.dataset.documents.get_keys_added(version):
+            self.queue_task(self.dataset.lookup_file(key))
+        return now
 
     @anycache(store=get_cache(), key_func=get_parent_cache_key)
     def get_parent(self, key: str, prefix: str | None = None) -> dict[str, str] | None:
@@ -133,6 +157,7 @@ def sync_to_aleph(
     prefix: str | None = None,
     foreign_id: str | None = None,
     use_cache: bool | None = True,
+    metadata: bool | None = True,
 ) -> AlephUploadStatus:
     worker = AlephUploadWorker(
         dataset=dataset,
@@ -141,6 +166,7 @@ def sync_to_aleph(
         prefix=prefix,
         foreign_id=foreign_id,
         use_cache=use_cache,
+        metadata=metadata,
     )
     worker.log_info(f"Starting sync to Aleph `{worker.host}` ...")
     return worker.run()

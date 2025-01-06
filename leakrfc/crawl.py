@@ -25,8 +25,7 @@ log = get_logger(__name__)
 
 
 def get_cache_key(self: "CrawlWorker", key: str) -> str | None:
-    if self.use_cache:
-        return make_cache_key(self, "crawl", key)
+    return make_cache_key(self, "crawl", key)
 
 
 class CrawlStatus(WorkerStatus):

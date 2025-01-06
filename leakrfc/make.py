@@ -30,9 +30,8 @@ Task: TypeAlias = tuple[str, Action]
 
 
 def get_cache_key(self: "MakeWorker", task: Task) -> str | None:
-    if self.use_cache:
-        key, action = task
-        return make_cache_key(self, "make", action, key)
+    key, action = task
+    return make_cache_key(self, "make", action, key)
 
 
 class MakeWorker(DatasetWorker):
