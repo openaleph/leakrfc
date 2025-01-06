@@ -1,6 +1,7 @@
 _wip
 archive/*
 .anystore/*
+tests/fixtures/**/.leakrfc/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
