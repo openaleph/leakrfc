@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, ContextManager, Literal, TextIO
 
 import pandas as pd
 from anystore.io import DoesNotExist, logged_io_items
+from anystore.types import StrGenerator
 from ftmq.types import CEGenerator
 
 from leakrfc.archive.cache import get_cache
@@ -157,7 +158,9 @@ class Documents:
 
     def get_versions(self) -> list[str]:
         keys: list[str] = []
-        glob = self.dataset._make_path(self.dataset.metadata_prefix, "documents.*.diff")
+        glob = self.dataset._make_path(
+            self.dataset.metadata_prefix, "documents.csv.*.diff"
+        )
         for key in self.dataset._storage.iterate_keys(glob=glob):
             ts = key[:-5].split("documents.csv.")[-1]
             keys.append(ts)
@@ -168,3 +171,25 @@ class Documents:
         if revs:
             return revs[-1]
         return ""
+
+    def get_keys_added(self, version: str) -> StrGenerator:
+        key = f"documents.csv.{version}.diff"
+        path = self.dataset._make_path(self.dataset.metadata_prefix, key)
+        for line in self.dataset._storage.stream(path, mode="r"):
+            if line.startswith("+") and not line.startswith("+++"):
+                io = StringIO(line)
+                reader = csv.reader(io)
+                for row in reader:
+                    yield row[0]
+                    break
+
+    def get_keys_deleted(self, version: str) -> StrGenerator:
+        key = f"documents.csv.{version}.diff"
+        path = self.dataset._make_path(self.dataset.metadata_prefix, key)
+        for line in self.dataset._storage.stream(path, mode="r"):
+            if line.startswith("-") and not line.startswith("---"):
+                io = StringIO(line)
+                reader = csv.reader(io)
+                for row in reader:
+                    yield row[0]
+                    break
