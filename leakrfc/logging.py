@@ -30,8 +30,14 @@ def get_logger(name: str, *args, **kwargs) -> BoundLogger:
     return get_raw_logger(name, *args, **kwargs)
 
 
-def configure_logging(level: int = logging.INFO, logger: str | None = None) -> None:
+def configure_logging(
+    level: int | str | None = logging.INFO, logger: str | None = None
+) -> None:
     """Configure log levels and structured logging"""
+    level = level or logging.INFO
+    if isinstance(level, str):
+        level = level.upper()
+
     shared_processors: List[Any] = [
         add_log_level,
         add_logger_name,

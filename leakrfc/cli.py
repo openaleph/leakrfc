@@ -85,7 +85,7 @@ def cli_leakrfc(
     if version:
         console.print(__version__)
         raise typer.Exit()
-    configure_logging()
+    configure_logging(level=settings.log_level)
     if dataset:
         STATE["dataset"] = get_dataset(dataset)
 
