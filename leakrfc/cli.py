@@ -18,6 +18,7 @@ from leakrfc.make import make_dataset
 from leakrfc.model import DatasetModel
 from leakrfc.settings import ArchiveSettings, Settings
 from leakrfc.sync.aleph import sync_to_aleph
+from leakrfc.sync.aleph_entities import load_catalog, load_dataset
 from leakrfc.sync.memorious import (
     get_file_name,
     get_file_name_strip_func,
@@ -28,8 +29,10 @@ from leakrfc.sync.memorious import (
 settings = Settings()
 archive_settings = ArchiveSettings()
 cli = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=settings.debug)
-sync = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=settings.debug)
-cli.add_typer(sync, name="sync")
+memorious = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=settings.debug)
+aleph = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=settings.debug)
+cli.add_typer(memorious, name="memorious", help="Memorious related operations")
+cli.add_typer(aleph, name="aleph", help="Aleph related operations")
 console = Console(stderr=True)
 
 
@@ -129,6 +132,14 @@ def cli_catalog(
             catalog = archive.make_catalog(collect_stats=collect_stats)
             data = clean_dict(catalog.model_dump(mode="json"))
             smart_write(out_uri, orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE))
+
+
+@cli.command("versions")
+def cli_versions():
+    """Show versions of dataset"""
+    with Dataset() as dataset:
+        for version in dataset.documents.get_versions():
+            console.print(version)
 
 
 @cli.command("make")
@@ -272,7 +283,7 @@ def cli_export(out: str):
         write_obj(export_dataset(dataset, out), "-")
 
 
-@sync.command("memorious")
+@memorious.command("sync")
 def cli_sync_memorious(
     uri: Annotated[str, typer.Option("-i")],
     use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
@@ -302,8 +313,8 @@ def cli_sync_memorious(
         write_obj(res, "-")
 
 
-@sync.command("aleph")
-def cli_sync_aleph(
+@aleph.command("sync")
+def cli_aleph_sync(
     use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
     host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
     api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
@@ -311,6 +322,9 @@ def cli_sync_aleph(
     foreign_id: Annotated[
         Optional[str], typer.Option(help="Aleph foreign_id (if different from dataset)")
     ] = None,
+    metadata: Annotated[
+        Optional[bool], typer.Option(help="Update collection metadata")
+    ] = True,
 ):
     """
     Sync a leakrfc dataset to Aleph
@@ -323,5 +337,68 @@ def cli_sync_aleph(
             prefix=folder,
             foreign_id=foreign_id,
             use_cache=use_cache,
+            metadata=metadata,
         )
         write_obj(res, "-")
+
+
+@aleph.command("load-dataset")
+def cli_aleph_load_dataset(
+    uri: Annotated[str, typer.Argument(help="Dataset index.json uri")],
+    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
+    host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
+    api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
+    foreign_id: Annotated[
+        Optional[str], typer.Option(help="Aleph foreign_id (if different from dataset)")
+    ] = None,
+    metadata: Annotated[
+        Optional[bool], typer.Option(help="Update collection metadata")
+    ] = True,
+):
+    """
+    Load entities into an Aleph instance
+    """
+    with ErrorHandler():
+        res = load_dataset(
+            uri,
+            host=host,
+            api_key=api_key,
+            foreign_id=foreign_id,
+            use_cache=use_cache,
+            metadata=metadata,
+        )
+        write_obj(res, "-")
+
+
+@aleph.command("load-catalog")
+def cli_aleph_load_catalog(
+    uri: Annotated[str, typer.Argument(help="Catalog index.json uri")],
+    # include_dataset: Annotated[
+    #     Optional[list[str]],
+    #     typer.Argument(help="Dataset foreign_ids to include, can be a glob"),
+    # ] = None,
+    # exclude_dataset: Annotated[
+    #     Optional[list[str]],
+    #     typer.Argument(help="Dataset foreign_ids to exclude, can be a glob"),
+    # ] = None,
+    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
+    host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
+    api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
+    metadata: Annotated[
+        Optional[bool], typer.Option(help="Update collection metadata")
+    ] = True,
+):
+    """
+    Load entities into an Aleph instance
+    """
+    with ErrorHandler():
+        for res in load_catalog(
+            uri,
+            host=host,
+            api_key=api_key,
+            # include_dataset=include_dataset,
+            # exclude_dataset=exclude_dataset,
+            use_cache=use_cache,
+            metadata=metadata,
+        ):
+            write_obj(res, "-")

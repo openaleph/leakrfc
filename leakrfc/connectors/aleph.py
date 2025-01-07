@@ -2,20 +2,19 @@ import os
 from functools import cache
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from alephclient.api import AlephAPI
+from alephclient.errors import AlephException
 from alephclient.settings import API_KEY, HOST
 from anystore.util import clean_dict
 from banal import ensure_list
 
 from leakrfc.logging import get_logger
 from leakrfc.model import DatasetModel
+from leakrfc.worker import DatasetWorker, make_cache_key
 
 log = get_logger(__name__)
-
-
-class AlephException(BaseException):
-    pass
 
 
 @cache
@@ -98,3 +97,33 @@ def update_collection_metadata(
     collection_id = get_or_create_collection_id(foreign_id)
     api = get_api()
     return api.update_collection(collection_id, data)
+
+
+class AlephDatasetWorker(DatasetWorker):
+    """Base worker for aleph related things"""
+
+    def __init__(
+        self,
+        host: str | None = None,
+        api_key: str | None = None,
+        foreign_id: str | None = None,
+        metadata: bool | None = True,
+        *args,
+        **kwargs,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.api = get_api(host, api_key)
+        self.host = get_host(self.api)
+        self.foreign_id = foreign_id or self.dataset.name
+        self.collection_id = get_or_create_collection_id(self.foreign_id, self.api)
+        self.update_metadata = metadata
+        self.consumer_threads = min(10, self.consumer_threads)  # urllib pool limit
+
+    def done(self) -> None:
+        self.log_info("Syncing to Aleph: Done", host=self.host)
+
+
+def make_aleph_cache_key(self: AlephDatasetWorker, *parts: str) -> str:
+    host = urlparse(self.host).netloc
+    assert host is not None
+    return make_cache_key(self, "sync", "aleph", host, *parts)

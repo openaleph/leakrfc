@@ -32,7 +32,7 @@ class ArchiveModel(BaseModel):
 
 
 class DatasetModel(Dataset):
-    leakrfc: ArchiveModel
+    leakrfc: ArchiveModel = ArchiveModel()
 
 
 class AbstractFileModel:

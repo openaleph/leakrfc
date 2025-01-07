@@ -177,7 +177,7 @@ class Documents:
         path = self.dataset._make_path(self.dataset.metadata_prefix, key)
         for line in self.dataset._storage.stream(path, mode="r"):
             if line.startswith("+") and not line.startswith("+++"):
-                io = StringIO(line)
+                io = StringIO(line[1:])
                 reader = csv.reader(io)
                 for row in reader:
                     yield row[0]

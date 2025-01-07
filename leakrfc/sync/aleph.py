@@ -8,40 +8,35 @@ from typing import Any
 from urllib.parse import urlparse
 
 from anystore import anycache
+from anystore.io import logged_io_items
 from anystore.worker import WorkerStatus
 
 from leakrfc.archive.cache import get_cache
 from leakrfc.archive.dataset import DatasetArchive
 from leakrfc.connectors import aleph
 from leakrfc.model import File
-from leakrfc.worker import DatasetWorker, make_cache_key
 
 
-def _make_cache_key(self: "AlephUploadWorker", *parts: str) -> str:
-    host = urlparse(self.host).netloc
-    assert host is not None
-    return make_cache_key(self, "sync", "aleph", host, *parts)
+def make_upload_cache_key(self: "AlephUploadWorker", file: File) -> str | None:
+    return aleph.make_aleph_cache_key(self, file.key)
 
 
-def get_upload_cache_key(self: "AlephUploadWorker", file: File) -> str | None:
-    return _make_cache_key(self, file.key)
-
-
-def get_parent_cache_key(
+def make_parent_cache_key(
     self: "AlephUploadWorker", key: str, prefix: str | None = None
 ) -> str | None:
     parts = [str(Path(key).parent)]
     if prefix:
-        parts += prefix
-    return _make_cache_key(self, *parts)
+        parts = prefix + parts
+    return aleph.make_aleph_cache_key(self, "folder", *parts, "created")
 
 
-def get_version_cache_key(self: "AlephUploadWorker", version: str) -> str | None:
-    return _make_cache_key(self, "versions", version)
+def make_version_cache_key(self: "AlephUploadWorker", version: str) -> str | None:
+    return aleph.make_aleph_cache_key(self, "versions", version)
 
 
-def get_current_version_cache_key(self: "AlephUploadWorker") -> str:
-    return self.dataset.documents.get_current_version()
+def make_current_version_cache_key(self: "AlephUploadWorker") -> str:
+    version = self.dataset.documents.get_current_version()
+    return aleph.make_aleph_cache_key(self, version)
 
 
 class AlephUploadStatus(WorkerStatus):
@@ -49,56 +44,44 @@ class AlephUploadStatus(WorkerStatus):
     folders_created: int = 0
 
 
-class AlephUploadWorker(DatasetWorker):
+class AlephUploadWorker(aleph.AlephDatasetWorker):
     """
     Sync leakrfc dataset to an Aleph instance
     """
 
-    def __init__(
-        self,
-        host: str | None = None,
-        api_key: str | None = None,
-        prefix: str | None = None,
-        foreign_id: str | None = None,
-        metadata: bool | None = True,
-        *args,
-        **kwargs,
-    ) -> None:
+    def __init__(self, prefix: str | None = None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.api = aleph.get_api(host, api_key)
-        self.host = aleph.get_host(self.api)
-        self.foreign_id = foreign_id or self.dataset.name
-        self.collection_id = aleph.get_or_create_collection_id(
-            self.foreign_id, self.api
-        )
         self.prefix = prefix
-        self.consumer_threads = min(10, self.consumer_threads)  # urllib pool limit
+        self.status_model = AlephUploadStatus
 
-        if metadata:
+        if self.update_metadata:
             self.log_info(
                 "Updating collection metadata ...",
                 aleph=self.host,
                 foreign_id=self.foreign_id,
             )
-            aleph.update_collection_metadata(self.dataset.name, self.dataset.config)
+            aleph.update_collection_metadata(self.foreign_id, self.dataset.config)
 
     def get_tasks(self) -> Any:
         for version in self.get_versions():
             self.queue_tasks_from_version(version)
         yield
 
-    @anycache(store=get_cache(), key_func=get_current_version_cache_key)
+    @anycache(store=get_cache(), key_func=make_current_version_cache_key)
     def get_versions(self) -> list[str]:
         return self.dataset.documents.get_versions()
 
-    @anycache(store=get_cache(), key_func=get_version_cache_key)
+    @anycache(store=get_cache(), key_func=make_version_cache_key)
     def queue_tasks_from_version(self, version: str) -> datetime:
+        self.log_info("Loading documents diff ...", version=version)
         now = datetime.now()
-        for key in self.dataset.documents.get_keys_added(version):
+        for key in logged_io_items(
+            self.dataset.documents.get_keys_added(version), "", "Load", "Document"
+        ):
             self.queue_task(self.dataset.lookup_file(key))
         return now
 
-    @anycache(store=get_cache(), key_func=get_parent_cache_key)
+    @anycache(store=get_cache(), key_func=make_parent_cache_key)
     def get_parent(self, key: str, prefix: str | None = None) -> dict[str, str] | None:
         with self.lock:
             p = Path(key)
@@ -112,7 +95,7 @@ class AlephUploadWorker(DatasetWorker):
         self.count(folders_created=1)
         return parent
 
-    @anycache(store=get_cache(), key_func=get_upload_cache_key)
+    @anycache(store=get_cache(), key_func=make_upload_cache_key)
     def handle_task(self, task: File) -> dict[str, Any]:
         res = {
             "uploaded_at": datetime.now().isoformat(),
@@ -145,9 +128,6 @@ class AlephUploadWorker(DatasetWorker):
         )
         self.count(uploaded=1)
         return res
-
-    def done(self) -> None:
-        self.log_info("Syncing to Aleph: Done")
 
 
 def sync_to_aleph(
