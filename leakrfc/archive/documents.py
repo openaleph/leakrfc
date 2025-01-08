@@ -19,11 +19,13 @@ from ftmq.types import CEGenerator
 from leakrfc.archive.cache import get_cache
 from leakrfc.logging import get_logger
 from leakrfc.model import Docs, Document
+from leakrfc.settings import ArchiveSettings
 
 if TYPE_CHECKING:
     from leakrfc.archive import DatasetArchive
 
 log = get_logger(__name__)
+settings = ArchiveSettings()
 
 
 class Documents:
@@ -32,7 +34,7 @@ class Documents:
     def __init__(self, dataset: "DatasetArchive") -> None:
         self.cache = get_cache()
         self.dataset = dataset
-        self.prefix = f"{dataset.name}/documents"
+        self.prefix = f"{settings.cache_prefix}/{dataset.name}/documents"
         self.ix_prefix = f"{dataset.name}/reversed"
         self.csv_path = dataset._get_documents_path()
         self._build_reversed = False
