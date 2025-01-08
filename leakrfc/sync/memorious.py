@@ -95,6 +95,8 @@ class MemoriousWorker(DatasetWorker):
 
     def done(self) -> None:
         documents = self.dataset.documents.write()
+        self.dataset.make_index()
+        self.dataset.make_size()
         self.log_info(
             f"Done memorious import from `{self.memorious.uri}`", documents=documents
         )
