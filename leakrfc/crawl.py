@@ -64,13 +64,11 @@ class CrawlWorker(DatasetWorker):
     def get_tasks(self) -> Generator[str, None, None]:
         self.log_info(f"Crawling `{self.remote.uri}` ...")
         for key in self.remote.iterate_keys():
-            if self.exclude or self.include:
-                if self.exclude and not fnmatch(key, self.exclude):
-                    yield key
-                elif self.include and fnmatch(key, self.include):
-                    yield key
-            else:
-                yield key
+            if self.exclude and fnmatch(key, self.exclude):
+                continue
+            if self.include and not fnmatch(key, self.include):
+                continue
+            yield key
 
     @anycache(store=get_cache(), key_func=get_cache_key)
     def handle_task(self, task: str) -> datetime:
