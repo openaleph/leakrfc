@@ -26,7 +26,7 @@ def make_parent_cache_key(
 ) -> str | None:
     parts = [str(Path(key).parent)]
     if prefix:
-        parts = prefix + parts
+        parts = [prefix] + parts
     return aleph.make_aleph_cache_key(self, "folder", *parts, "created")
 
 
@@ -76,7 +76,10 @@ class AlephUploadWorker(aleph.AlephDatasetWorker):
         self.log_info("Loading documents diff ...", version=version)
         now = datetime.now()
         for key in logged_io_items(
-            self.dataset.documents.get_keys_added(version), "", "Load", "Document"
+            self.dataset.documents.get_keys_added(version),
+            uri=version,
+            action="Load",
+            item_name="Document",
         ):
             self.queue_task(self.dataset.lookup_file(key))
         return now
