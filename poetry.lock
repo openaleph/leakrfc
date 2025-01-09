@@ -4936,4 +4936,4 @@ api = ["fastapi", "pyjwt", "uvicorn"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4"
-content-hash = "c6a03d3b073e908706b0108509142453452ff8f8f9062a8f875c3d18b19bae96"
+content-hash = "b745969cb373d62904ab3c255ea05ea581348eb170cf6eaee2308fa881da7d07"
