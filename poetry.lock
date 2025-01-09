@@ -265,7 +265,7 @@ sql = ["sqlalchemy (>=2.0.36,<3.0.0)"]
 type = "git"
 url = "https://github.com/investigativedata/anystore.git"
 reference = "develop"
-resolved_reference = "27b5e9e5f245dba0ea1eedb879f7786c53123c5e"
+resolved_reference = "aa881c9f37f17d0184e4f61e71115852d14c1c86"
 
 [[package]]
 name = "asttokens"
