@@ -23,9 +23,10 @@ from leakrfc.connectors.aleph import (
 )
 
 
-def make_resource_cache_key(self, resource: Resource) -> str:
-    key = resource.checksum or resource.timestamp or resource.url
-    return make_aleph_cache_key(self, "resource", str(key))
+def make_resource_cache_key(self, resource: Resource) -> str | None:
+    key = resource.checksum or resource.timestamp
+    if key:
+        return make_aleph_cache_key(self, "resource", str(key))
 
 
 class AlephLoadDatasetStatus(WorkerStatus):

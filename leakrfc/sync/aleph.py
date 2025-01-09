@@ -65,7 +65,7 @@ class AlephUploadWorker(aleph.AlephDatasetWorker):
     def get_tasks(self) -> Any:
         for version in self.get_versions():
             self.queue_tasks_from_version(version)
-        yield
+        return []
 
     @anycache(store=get_cache(), key_func=make_current_version_cache_key)
     def get_versions(self) -> list[str]:
