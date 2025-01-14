@@ -57,7 +57,7 @@ class AlephLoadDataset(AlephDatasetWorker):
 
     @anycache(store=get_cache(), key_func=make_resource_cache_key)
     def queue_tasks_from_resource(self, resource: Resource) -> datetime:
-        self.log_info("queue_task_from_resource")
+        now = datetime.now()
         buffer = []
         ix = 1
         for ix, proxy in enumerate(
@@ -73,6 +73,7 @@ class AlephLoadDataset(AlephDatasetWorker):
         self.count(entities=len(buffer), resources=1)
         buffer = []
         self.log_info(f"Loaded {ix} entities.", resource=str(resource.url))
+        return now
 
     def handle_task(self, task: Any) -> Any:
         self.api.write_entities(self.collection_id, task)
