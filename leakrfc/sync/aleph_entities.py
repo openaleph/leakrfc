@@ -83,7 +83,7 @@ class AlephLoadDataset(AlephDatasetWorker):
         for resource in dataset.resources:
             if resource.mime_type == FTM:
                 self.queue_tasks_from_resource(resource)
-        yield
+        return []
 
 
 def load_dataset(
