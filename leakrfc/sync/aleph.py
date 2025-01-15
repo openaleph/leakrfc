@@ -8,7 +8,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from anystore import anycache
-from anystore.io import logged_io_items
+from anystore.io import logged_items
 from anystore.worker import WorkerStatus
 
 from leakrfc.archive.cache import get_cache
@@ -75,9 +75,9 @@ class AlephUploadWorker(aleph.AlephDatasetWorker):
     def queue_tasks_from_version(self, version: str) -> datetime:
         self.log_info("Loading documents diff ...", version=version)
         now = datetime.now()
-        for key in logged_io_items(
+        for key in logged_items(
             self.dataset.documents.get_keys_added(version),
-            uri=version,
+            version=version,
             action="Load",
             item_name="Document",
         ):

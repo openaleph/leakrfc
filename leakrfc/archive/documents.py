@@ -12,7 +12,7 @@ from io import StringIO
 from typing import TYPE_CHECKING, ContextManager, Literal, TextIO
 
 import pandas as pd
-from anystore.io import DoesNotExist, logged_io_items
+from anystore.io import DoesNotExist, logged_items
 from anystore.types import StrGenerator
 from ftmq.types import CEGenerator
 
@@ -57,7 +57,7 @@ class Documents:
 
     def iter_documents(self) -> Docs:
         df = self.get_db()
-        for _, row in logged_io_items(
+        for _, row in logged_items(
             df.iterrows(),
             uri=self.dataset._get_documents_path(),
             action="Load",
