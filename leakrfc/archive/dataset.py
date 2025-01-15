@@ -44,10 +44,6 @@ class ReadOnlyDatasetArchive(BaseArchive):
         path = self._get_file_info_path(key)
         return self._storage.get(path, model=File)
 
-    def lookup_file_by_content_hash(self, ch: str) -> File:
-        key = self.documents.get_key_for_content_hash(ch)
-        return self.lookup_file(key)
-
     def stream_file(self, file: File) -> BytesGenerator:
         yield from self._storage.stream(self._make_path(file.key))
 

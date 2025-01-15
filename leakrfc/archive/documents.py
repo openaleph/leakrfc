@@ -71,19 +71,6 @@ class Documents:
         for document in self.iter_documents():
             yield document.to_proxy()
 
-    def build_reversed(self) -> None:
-        # build reversed hash -> key index
-        if self._build_reversed:
-            return
-        log.info(
-            "Building reversed index ...",
-            dataset=self.dataset.name,
-            cache=self.cache.uri,
-        )
-        for doc in self.iter_documents():
-            self.cache.put(f"{self.ix_prefix}/{doc.content_hash}", doc.key)
-        self._build_reversed = True
-
     def add(self, doc: Document) -> None:
         """Mark a document for addition /change"""
         self.cache.put(f"{self.prefix}/add/{doc.key}", doc)
@@ -134,10 +121,6 @@ class Documents:
             data = self.cache.pop(key)
             data["dataset"] = self.dataset.name
             yield Document(**data)
-
-    def get_key_for_content_hash(self, ch: str) -> str:
-        self.build_reversed()
-        return self.cache.get(f"{self.ix_prefix}/{ch}")
 
     def get_total_size(self) -> int:
         df = self.get_db()

@@ -21,9 +21,6 @@ def _test_dataset(dataset: DatasetArchive | ReadOnlyDatasetArchive):
     key = "utf.txt"
     content_hash = "5a6acf229ba576d9a40b09292595658bbb74ef56"
 
-    # lookup by content hash
-    assert dataset.lookup_file_by_content_hash(content_hash) == dataset.lookup_file(key)
-
     # lookup by key
     assert dataset.exists(key)
     file = dataset.lookup_file(key)
