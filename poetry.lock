@@ -233,14 +233,16 @@ trio = ["trio (>=0.26.1)"]
 
 [[package]]
 name = "anystore"
-version = "0.2.2"
+version = "0.3.0"
 description = "Store and cache things anywhere"
 optional = false
-python-versions = ">=3.11,<4"
+python-versions = "<4,>=3.11"
 groups = ["main"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
-files = []
-develop = false
+files = [
+    {file = "anystore-0.3.0-py3-none-any.whl", hash = "sha256:c1bda0191805967ea250446b458a306ccf7b5f2cb8c50eb09bb1bf281fde27ee"},
+    {file = "anystore-0.3.0.tar.gz", hash = "sha256:5aa9e624025800d7af296f9d3d29c810413b10b103563a502d0b2ef713e18166"},
+]
 
 [package.dependencies]
 banal = ">=1.0.6,<2.0.0"
@@ -258,12 +260,6 @@ typer = ">=0.15.1,<0.16.0"
 [package.extras]
 redis = ["fakeredis (>=2.26.2,<3.0.0)", "redis (>=5.2.1,<6.0.0)"]
 sql = ["sqlalchemy (>=2.0.36,<3.0.0)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/investigativedata/anystore.git"
-reference = "develop"
-resolved_reference = "9a8037b6dcf36688fec90cf0c74cbd5bfe4bee77"
 
 [[package]]
 name = "asttokens"
@@ -1184,18 +1180,20 @@ tqdm = ["tqdm"]
 
 [[package]]
 name = "ftmq"
-version = "0.7.1"
+version = "0.8.0"
 description = "followthemoney query dsl and io helpers"
 optional = false
-python-versions = ">=3.11,<4"
+python-versions = "<4,>=3.11"
 groups = ["main"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
-files = []
-develop = false
+files = [
+    {file = "ftmq-0.8.0-py3-none-any.whl", hash = "sha256:a5749f4c6f465bb6708d35683c8b443bd341609a5fa8888c31461fae6d382f83"},
+    {file = "ftmq-0.8.0.tar.gz", hash = "sha256:caa409fb6f878156b550fd2fda87c7ac48da15bd2853b7d0c3fe06c9b9e9da7d"},
+]
 
 [package.dependencies]
 alephclient = ">=2.6.0,<3.0.0"
-anystore = {git = "https://github.com/investigativedata/anystore.git", rev = "develop"}
+anystore = ">=0.3.0,<0.4.0"
 click = ">=8.1.8,<9.0.0"
 click-default-group = ">=1.2.4,<2.0.0"
 nomenklatura = ">=3.14.0,<4.0.0"
@@ -1208,12 +1206,6 @@ pyicu = ">=2.14,<3.0"
 level = ["plyvel (>=1.5.1,<2.0.0)"]
 redis = ["fakeredis (>=2.26.2,<3.0.0)", "redis (>=5.2.1,<6.0.0)"]
 sql = ["sqlalchemy (>=2.0.36,<3.0.0)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/investigativedata/ftmq.git"
-reference = "develop"
-resolved_reference = "9fc3871391227449e59fe5d3765fef408afe9f5d"
 
 [[package]]
 name = "ghp-import"
@@ -2900,15 +2892,15 @@ ptyprocess = ">=0.5"
 
 [[package]]
 name = "phonenumbers"
-version = "8.13.52"
+version = "8.13.53"
 description = "Python version of Google's common library for parsing, formatting, storing and validating international phone numbers."
 optional = false
 python-versions = "*"
 groups = ["main"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "phonenumbers-8.13.52-py2.py3-none-any.whl", hash = "sha256:e803210038ece9d208b129e3023dc20e656a820d6bf6f1cb0471d4164f54bada"},
-    {file = "phonenumbers-8.13.52.tar.gz", hash = "sha256:fdc371ea6a4da052beb1225de63963d5a2fddbbff2bb53e3a957f360e0185f80"},
+    {file = "phonenumbers-8.13.53-py2.py3-none-any.whl", hash = "sha256:fa7b93e12b3ac9baa7b056061cfcbe4de406039f720bb539dc240bed9cc43da2"},
+    {file = "phonenumbers-8.13.53.tar.gz", hash = "sha256:b7308f21837defa567b4f961925b6c652dd5148f3e0fadbd158a10758cc63d91"},
 ]
 
 [[package]]
@@ -4570,15 +4562,15 @@ standard = ["colorama (>=0.4)", "httptools (>=0.6.3)", "python-dotenv (>=0.13)",
 
 [[package]]
 name = "virtualenv"
-version = "20.28.1"
+version = "20.29.0"
 description = "Virtual Python Environment builder"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "virtualenv-20.28.1-py3-none-any.whl", hash = "sha256:412773c85d4dab0409b83ec36f7a6499e72eaf08c80e81e9576bca61831c71cb"},
-    {file = "virtualenv-20.28.1.tar.gz", hash = "sha256:5d34ab240fdb5d21549b76f9e8ff3af28252f5499fb6d6f031adac4e5a8c5329"},
+    {file = "virtualenv-20.29.0-py3-none-any.whl", hash = "sha256:c12311863497992dc4b8644f8ea82d3b35bb7ef8ee82e6630d76d0197c39baf9"},
+    {file = "virtualenv-20.29.0.tar.gz", hash = "sha256:6345e1ff19d4b1296954cee076baaf58ff2a12a84a338c62b02eda39f20aa982"},
 ]
 
 [package.dependencies]
@@ -4873,4 +4865,4 @@ api = ["fastapi", "pyjwt", "uvicorn"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4"
-content-hash = "0856c4ea0ca8b14698e4f0b63dba443cc54aaad0faf7acea313a96d54c0aa561"
+content-hash = "23647368d0170086dc59bf7cdce3441dc3ccc56a6ef4cfc66c30fb19b27c9b35"
