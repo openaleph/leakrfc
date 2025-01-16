@@ -1,3 +1,9 @@
+[![leakrfc on pypi](https://img.shields.io/pypi/v/leakrfc)](https://pypi.org/project/leakrfc/)
+[![Python test and package](https://github.com/investigativedata/leakrfc/actions/workflows/python.yml/badge.svg)](https://github.com/investigativedata/leakrfc/actions/workflows/python.yml)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+[![Coverage Status](https://coveralls.io/repos/github/investigativedata/leakrfc/badge.svg?branch=main)](https://coveralls.io/github/investigativedata/leakrfc?branch=main)
+[![AGPLv3+ License](https://img.shields.io/pypi/l/leakrfc)](./LICENSE)
+
 # leakrfc
 
 "_A RFC for leaks_"
