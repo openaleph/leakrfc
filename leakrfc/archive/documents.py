@@ -157,6 +157,11 @@ class Documents:
             return revs[-1]
         return ""
 
+    def get_version(self, version: str) -> str:
+        key = f"documents.csv.{version}.diff"
+        path = self.dataset._make_path(self.dataset.metadata_prefix, key)
+        return self.dataset._storage.get(path)
+
     def get_keys_added(self, version: str) -> StrGenerator:
         key = f"documents.csv.{version}.diff"
         path = self.dataset._make_path(self.dataset.metadata_prefix, key)

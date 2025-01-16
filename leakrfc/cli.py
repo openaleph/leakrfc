@@ -2,7 +2,7 @@ from typing import Annotated, Any, Optional, TypedDict
 
 import orjson
 import typer
-from anystore.io import smart_open, smart_write
+from anystore.io import DEFAULT_WRITE_MODE, smart_open, smart_write
 from anystore.util import clean_dict
 from pydantic import BaseModel
 from rich.console import Console
@@ -140,6 +140,20 @@ def cli_versions():
     with Dataset() as dataset:
         for version in dataset.documents.get_versions():
             console.print(version)
+
+
+@cli.command("diff")
+def cli_diff(
+    version: Annotated[str, typer.Option("-v", help="Version")],
+    out_uri: Annotated[str, typer.Option("-o")] = "-",
+):
+    """
+    Show documents diff for given version
+    """
+    with Dataset() as dataset:
+        ver = dataset.documents.get_version(version)
+        with smart_open(out_uri, DEFAULT_WRITE_MODE) as out:
+            out.write(ver)
 
 
 @cli.command("make")
