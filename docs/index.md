@@ -45,5 +45,6 @@ Before creating a commit, this checks for correct code formatting (isort, black)
 ## License and Copyright
 
 `leakrfc`, (c) 2024 [investigativedata.io](https://investigativedata.io)
+`leakrfc`, (c) 2025 [investigativedata.io](https://investigativedata.io)
 
 `leakrfc` is licensed under the AGPLv3 or later license.
