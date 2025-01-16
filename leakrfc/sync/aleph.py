@@ -9,7 +9,9 @@ from urllib.parse import urlparse
 
 from anystore import anycache
 from anystore.io import logged_items
+from anystore.types import SDict
 from anystore.worker import WorkerStatus
+from banal import ensure_dict
 
 from leakrfc.archive.cache import get_cache
 from leakrfc.archive.dataset import DatasetArchive
@@ -37,6 +39,16 @@ def make_version_cache_key(self: "AlephUploadWorker", version: str) -> str | Non
 def make_current_version_cache_key(self: "AlephUploadWorker") -> str:
     version = self.dataset.documents.get_current_version()
     return aleph.make_aleph_cache_key(self, version)
+
+
+def get_source_url(data: SDict) -> str | None:
+    url = data.get("source_url")
+    if url:
+        return url
+    url = ensure_dict(data.get("extra")).get("source_url")
+    if url:
+        return url
+    return data.get("url")
 
 
 class AlephUploadStatus(WorkerStatus):
@@ -107,7 +119,7 @@ class AlephUploadWorker(aleph.AlephDatasetWorker):
             foreign_id=self.foreign_id,
         )
         metadata = {**task.extra, "file_name": task.name, "foreign_id": task.key}
-        metadata["source_url"] = metadata.get("url")
+        metadata["source_url"] = get_source_url(metadata)
         parent = self.get_parent(task.key, self.prefix)
         if parent:
             metadata["parent"] = parent
