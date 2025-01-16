@@ -1,0 +1,63 @@
+site_name: leakrfc
+site_url: https://docs.investigraph.dev/lib/leakrfc
+repo_url: https://github.com/investigativedata/leakrfc
+nav:
+  - Intro: index.md
+  - quickstart.md
+  - RFC: rfc.md
+  - Documentation:
+    - crawl.md
+    - make.md
+    - configuration.md
+    - cache.md
+    - api.md
+  - Adapters:
+    - sync/aleph.md
+    - sync/memorious.md
+  - Reference:
+      - leakrfc.cli: reference/cli.md
+theme:
+  name: material
+  logo: https://cdn.investigativedata.org/style/logo_basic_dark.svg
+  favicon: https://cdn.investigativedata.org/style/favicon.svg
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    # - navigation.footer
+    - toc.follow
+    - content.code.copy
+extra_css:
+  - stylesheets/extra.css
+extra:
+  social:
+    - icon: material/mail
+      link: mailto:hi@investigativedata.org
+    - icon: material/web
+      link: https://investigativedata.io
+    - icon: material/github
+      link: https://github.com/investigativedata/leakrfc
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - mkdocs-typer
+  - pymdownx.details
+  - admonition
+  - pymdownx.tasklist:
+      custom_checkbox: true
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_root_heading: false
+            show_object_full_path: false

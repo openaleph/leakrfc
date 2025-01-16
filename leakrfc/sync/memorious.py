@@ -1,13 +1,3 @@
-"""
-Convert a "memorious collection" (the output format of the store->directory
-stage) into a leakrfc dataset
-
-memorious format:
-    ./data/store/test_dataset/
-        ./<sha1>.data.pdf|doc|...  # actual file
-        ./<sha1>.json              # metadata file
-"""
-
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
@@ -108,6 +98,29 @@ def import_memorious(
     key_func: Callable | None = None,
     use_cache: bool | None = True,
 ) -> MemoriousStatus:
+    """
+    Convert a "memorious collection" (the output format of the store->directory
+    stage) into a leakrfc dataset
+
+    memorious store:
+        ```
+        ./data/store/test_dataset/
+            ./<sha1>.data.pdf|doc|...  # actual file
+            ./<sha1>.json              # metadata file
+        ```
+
+    The memorious json metadata for each file will be stored in the leakrfc
+    metadata at the `extra` property for each file.
+
+    Args:
+        dataset: leakrfc Dataset instance
+        uri: local or remote location of the memorious store that supports file
+            listing
+        key_func: A function to generate file keys (their relative paths), per
+            default it is generated from the source url.
+        use_cache: Use global processing cache to skip tasks
+    """
+
     worker = MemoriousWorker(uri, key_func, dataset=dataset, use_cache=use_cache)
     worker.log_info(f"Starting memorious import from `{worker.memorious.uri}` ...")
     return worker.run()

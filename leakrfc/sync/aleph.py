@@ -45,10 +45,6 @@ class AlephUploadStatus(WorkerStatus):
 
 
 class AlephUploadWorker(aleph.AlephDatasetWorker):
-    """
-    Sync leakrfc dataset to an Aleph instance
-    """
-
     def __init__(self, prefix: str | None = None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.prefix = prefix
@@ -142,6 +138,20 @@ def sync_to_aleph(
     use_cache: bool | None = True,
     metadata: bool | None = True,
 ) -> AlephUploadStatus:
+    """
+    Incrementally sync a leakrfc dataset into an Aleph instance.
+
+    As long as using `use_cache`, only new documents will be imported.
+
+    Args:
+        dataset: leakrfc Dataset instance
+        host: Aleph host (can be set via env `ALEPHCLIENT_HOST`)
+        api_key: Aleph api key (can be set via env `ALEPHCLIENT_API_KEY`)
+        prefix: Add a folder prefix to import documents into
+        foreign_id: Aleph collection foreign_id (if different from leakrfc dataset name)
+        use_cache: Use global processing cache to skip tasks
+        metadata: Update Aleph collection metadata
+    """
     worker = AlephUploadWorker(
         dataset=dataset,
         host=host,

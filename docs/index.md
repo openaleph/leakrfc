@@ -16,15 +16,15 @@ Requires python 3.11 or later.
 pip install leakrfc
 ```
 
-## Documentation
+## Quickstart
 
-[docs.investigraph.dev/lib/leakrfc](https://docs.investigraph.dev/lib/leakrfc)
+[>> get started here](quickstart.md)
 
 ## Development
 
 This package is using [poetry](https://python-poetry.org/) for packaging and dependencies management, so first [install it](https://python-poetry.org/docs/#installation).
 
-Clone this repository to a local destination.
+Clone [this repository](https://github.com/investigativedata/leakrfc) to a local destination.
 
 Within the repo directory, run
 
@@ -36,7 +36,7 @@ This installs a few development dependencies, including [pre-commit](https://pre
 
 Before creating a commit, this checks for correct code formatting (isort, black) and some other useful stuff (see: `.pre-commit-config.yaml`)
 
-### testing
+### Testing
 
 `leakrfc` uses [pytest](https://docs.pytest.org/en/stable/) as the testing framework.
 
@@ -44,8 +44,6 @@ Before creating a commit, this checks for correct code formatting (isort, black)
 
 ## License and Copyright
 
-`leakrfc`, (C) 2024 investigativedata.io
+`leakrfc`, (c) 2024 [investigativedata.io](https://investigativedata.io)
 
 `leakrfc` is licensed under the AGPLv3 or later license.
-
-see [NOTICE](./NOTICE) and [LICENSE](./LICENSE)

@@ -114,7 +114,7 @@ class CrawlWorker(DatasetWorker):
     ) -> CrawlStatus:
         return crawl(
             uri,
-            storage=self.dataset,
+            dataset=self.dataset,
             skip_existing=self.skip_existing,
             extract=self.extract,
             extract_keep_source=self.extract_keep_source,
@@ -133,7 +133,7 @@ class CrawlWorker(DatasetWorker):
 
 def crawl(
     uri: Uri,
-    storage: DatasetArchive,
+    dataset: DatasetArchive,
     skip_existing: bool | None = True,
     extract: bool | None = False,
     extract_keep_source: bool | None = False,
@@ -145,6 +145,25 @@ def crawl(
     origin: Origins | None = ORIGIN_ORIGINAL,
     source_file: File | None = None,
 ) -> CrawlStatus:
+    """
+    Crawl a local or remote location of documents into a leakrfc dataset.
+
+    Args:
+        uri: local or remote location uri that supports file listing
+        dataset: leakrfc Dataset instance
+        skip_existing: Don't re-crawl existing keys (doesn't check for checksum)
+        extract: Extract archives using [`patool`](https://pypi.org/project/patool/)
+        extract_keep_source: When extracting, still import the source archive
+        extract_ensure_subdir: Make sub-directories for extracted files with the
+            archive name to avoid overwriting existing files during extraction
+            of multiple archives with the same directory structure
+        use_cache: Use global processing cache to skip tasks
+        write_documents_db: Create csv-based document tables at the end of crawl run
+        exclude: Exclude glob for file paths not to crawl
+        include: Include glob for file paths to crawl
+        origin: Origin of files (used for sub runs of crawl within a crawl job)
+        source_file: Source file (used for sub runs of crawl within a crawl job)
+    """
     remote_store = get_store(uri=uri)
     # FIXME ensure long timeouts
     if remote_store.scheme.startswith("http"):
@@ -156,7 +175,7 @@ def crawl(
         remote_store.backend_config = backend_config
     worker = CrawlWorker(
         remote_store,
-        dataset=storage,
+        dataset=dataset,
         skip_existing=skip_existing,
         extract=extract,
         extract_keep_source=extract_keep_source,

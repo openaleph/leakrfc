@@ -118,6 +118,25 @@ def make_dataset(
     cleanup: bool | None = True,
     metadata_only: bool | None = False,
 ) -> MakeStatus:
+    """
+    Make or update a leakrfc dataset and optionally check its integrity.
+
+    Per default, this iterates through all the source files and creates (or
+    updates) file metadata json files.
+
+    At the end, dataset statistics and documents.csv (and their diff) are
+    created.
+
+    Args:
+        dataset: leakrfc Dataset instance
+        use_cache: Use global processing cache to skip tasks
+        check_integrity: Check checksum for each file (logs mismatches)
+        cleanup: When checking integrity, fix mismatched metadata and delete
+            unreferenced metadata files
+        metadata_only: Only iterate through existing metadata files, don't look
+            for new source files
+
+    """
     worker = MakeWorker(
         check_integrity, cleanup, metadata_only, dataset, use_cache=use_cache
     )
