@@ -2,7 +2,8 @@ from typing import Annotated, Any, Optional, TypedDict
 
 import orjson
 import typer
-from anystore.io import smart_open, smart_write
+from anystore.io import DEFAULT_WRITE_MODE, smart_open, smart_write
+from anystore.util import clean_dict
 from pydantic import BaseModel
 from rich.console import Console
 
@@ -14,8 +15,10 @@ from leakrfc.exceptions import ImproperlyConfigured
 from leakrfc.export import export_dataset
 from leakrfc.logging import configure_logging
 from leakrfc.make import make_dataset
+from leakrfc.model import DatasetModel
 from leakrfc.settings import ArchiveSettings, Settings
 from leakrfc.sync.aleph import sync_to_aleph
+from leakrfc.sync.aleph_entities import load_catalog, load_dataset
 from leakrfc.sync.memorious import (
     get_file_name,
     get_file_name_strip_func,
@@ -26,8 +29,10 @@ from leakrfc.sync.memorious import (
 settings = Settings()
 archive_settings = ArchiveSettings()
 cli = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=settings.debug)
-sync = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=settings.debug)
-cli.add_typer(sync, name="sync")
+memorious = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=settings.debug)
+aleph = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=settings.debug)
+cli.add_typer(memorious, name="memorious", help="Memorious related operations")
+cli.add_typer(aleph, name="aleph", help="Aleph related operations")
 console = Console(stderr=True)
 
 
@@ -83,7 +88,7 @@ def cli_leakrfc(
     if version:
         console.print(__version__)
         raise typer.Exit()
-    configure_logging()
+    configure_logging(level=settings.log_level)
     if dataset:
         STATE["dataset"] = get_dataset(dataset)
 
@@ -102,6 +107,55 @@ def cli_config():
         write_obj(dataset, "-")
 
 
+@cli.command("catalog")
+def cli_catalog(
+    out_uri: Annotated[str, typer.Option("-o")] = "-",
+    collect_stats: Annotated[
+        bool, typer.Option(help="Collect document statistics")
+    ] = False,
+    names_only: Annotated[
+        bool, typer.Option(help="Only show dataset names (`foreign_id`)")
+    ] = False,
+):
+    """
+    Show catalog for all existing datasets
+    """
+    with ErrorHandler():
+        archive = configure_archive()
+        if names_only:
+            datasets = set()
+            for dataset in archive.get_datasets():
+                datasets.add(dataset.name)
+            data = "\n".join(sorted(datasets))
+            smart_write(out_uri, data.encode() + b"\n")
+        else:
+            catalog = archive.make_catalog(collect_stats=collect_stats)
+            data = clean_dict(catalog.model_dump(mode="json"))
+            smart_write(out_uri, orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE))
+
+
+@cli.command("versions")
+def cli_versions():
+    """Show versions of dataset"""
+    with Dataset() as dataset:
+        for version in dataset.documents.get_versions():
+            console.print(version)
+
+
+@cli.command("diff")
+def cli_diff(
+    version: Annotated[str, typer.Option("-v", help="Version")],
+    out_uri: Annotated[str, typer.Option("-o")] = "-",
+):
+    """
+    Show documents diff for given version
+    """
+    with Dataset() as dataset:
+        ver = dataset.documents.get_version(version)
+        with smart_open(out_uri, DEFAULT_WRITE_MODE) as out:
+            out.write(ver)
+
+
 @cli.command("make")
 def cli_make(
     out_uri: Annotated[str, typer.Option("-o")] = "-",
@@ -112,13 +166,25 @@ def cli_make(
     cleanup: Annotated[
         Optional[bool], typer.Option(help="Cleanup (delete) unreferenced metadata")
     ] = True,
+    metadata_only: Annotated[
+        Optional[bool], typer.Option(help="Check document metadata only")
+    ] = False,
+    dataset_metadata_only: Annotated[
+        Optional[bool], typer.Option(help="Compute dataset metadata only")
+    ] = False,
 ):
     """
     Make or update a leakrfc dataset and check integrity
     """
     with Dataset() as dataset:
-        res = make_dataset(dataset, use_cache, check_integrity, cleanup)
-        write_obj(res, out_uri)
+        if dataset_metadata_only:
+            dataset.make_index()
+            obj = dataset._storage.get(dataset._get_index_path(), model=DatasetModel)
+        else:
+            obj = make_dataset(
+                dataset, use_cache, check_integrity, cleanup, metadata_only
+            )
+        write_obj(obj, out_uri)
 
 
 @cli.command("get")
@@ -151,6 +217,7 @@ def cli_head(key: str, out_uri: Annotated[str, typer.Option("-o")] = "-"):
 def cli_ls(
     out_uri: Annotated[str, typer.Option("-o")] = "-",
     keys: Annotated[bool, typer.Option(help="Show only keys")] = False,
+    checksums: Annotated[bool, typer.Option(help="Show only checksums")] = False,
 ):
     """
     List all files in dataset archive
@@ -158,6 +225,8 @@ def cli_ls(
     with Dataset() as dataset:
         if keys:
             files = (f.key.encode() + b"\n" for f in dataset.iter_files())
+        elif checksums:
+            files = (f.content_hash.encode() + b"\n" for f in dataset.iter_files())
         else:
             files = (
                 orjson.dumps(f.model_dump(), option=orjson.OPT_APPEND_NEWLINE)
@@ -186,6 +255,18 @@ def cli_crawl(
     extract_keep_source: Annotated[
         Optional[bool], typer.Option(help="Keep the source archive when extracting")
     ] = False,
+    extract_ensure_subdir: Annotated[
+        Optional[bool],
+        typer.Option(
+            help="Ensure a subdirectory with the package filename when extracting"
+        ),
+    ] = False,
+    exclude: Annotated[
+        Optional[str], typer.Option(help="Exclude paths glob pattern")
+    ] = None,
+    include: Annotated[
+        Optional[str], typer.Option(help="Include paths glob pattern")
+    ] = None,
 ):
     """
     Crawl documents from local or remote sources
@@ -199,6 +280,9 @@ def cli_crawl(
                 skip_existing=skip_existing,
                 extract=extract,
                 extract_keep_source=extract_keep_source,
+                extract_ensure_subdir=extract_ensure_subdir,
+                exclude=exclude,
+                include=include,
             ),
             out_uri,
         )
@@ -213,7 +297,7 @@ def cli_export(out: str):
         write_obj(export_dataset(dataset, out), "-")
 
 
-@sync.command("memorious")
+@memorious.command("sync")
 def cli_sync_memorious(
     uri: Annotated[str, typer.Option("-i")],
     use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
@@ -243,8 +327,8 @@ def cli_sync_memorious(
         write_obj(res, "-")
 
 
-@sync.command("aleph")
-def cli_sync_aleph(
+@aleph.command("sync")
+def cli_aleph_sync(
     use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
     host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
     api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
@@ -252,6 +336,9 @@ def cli_sync_aleph(
     foreign_id: Annotated[
         Optional[str], typer.Option(help="Aleph foreign_id (if different from dataset)")
     ] = None,
+    metadata: Annotated[
+        Optional[bool], typer.Option(help="Update collection metadata")
+    ] = True,
 ):
     """
     Sync a leakrfc dataset to Aleph
@@ -264,5 +351,68 @@ def cli_sync_aleph(
             prefix=folder,
             foreign_id=foreign_id,
             use_cache=use_cache,
+            metadata=metadata,
         )
         write_obj(res, "-")
+
+
+@aleph.command("load-dataset")
+def cli_aleph_load_dataset(
+    uri: Annotated[str, typer.Argument(help="Dataset index.json uri")],
+    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
+    host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
+    api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
+    foreign_id: Annotated[
+        Optional[str], typer.Option(help="Aleph foreign_id (if different from dataset)")
+    ] = None,
+    metadata: Annotated[
+        Optional[bool], typer.Option(help="Update collection metadata")
+    ] = True,
+):
+    """
+    Load entities into an Aleph instance
+    """
+    with ErrorHandler():
+        res = load_dataset(
+            uri,
+            host=host,
+            api_key=api_key,
+            foreign_id=foreign_id,
+            use_cache=use_cache,
+            metadata=metadata,
+        )
+        write_obj(res, "-")
+
+
+@aleph.command("load-catalog")
+def cli_aleph_load_catalog(
+    uri: Annotated[str, typer.Argument(help="Catalog index.json uri")],
+    # include_dataset: Annotated[
+    #     Optional[list[str]],
+    #     typer.Argument(help="Dataset foreign_ids to include, can be a glob"),
+    # ] = None,
+    # exclude_dataset: Annotated[
+    #     Optional[list[str]],
+    #     typer.Argument(help="Dataset foreign_ids to exclude, can be a glob"),
+    # ] = None,
+    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
+    host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
+    api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
+    metadata: Annotated[
+        Optional[bool], typer.Option(help="Update collection metadata")
+    ] = True,
+):
+    """
+    Load entities into an Aleph instance
+    """
+    with ErrorHandler():
+        for res in load_catalog(
+            uri,
+            host=host,
+            api_key=api_key,
+            # include_dataset=include_dataset,
+            # exclude_dataset=exclude_dataset,
+            use_cache=use_cache,
+            metadata=metadata,
+        ):
+            write_obj(res, "-")

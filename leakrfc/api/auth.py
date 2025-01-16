@@ -41,8 +41,8 @@ class TokenData(BaseModel):
 
 
 def create_access_token(dataset: str, key: str, exp: int | None = None) -> str:
-    exp = datetime.now(UTC) + timedelta(minutes=exp or settings.access_token_expire)
-    data = {"sub": f"{dataset}/{key}", "exp": exp}
+    expires = datetime.now(UTC) + timedelta(minutes=exp or settings.access_token_expire)
+    data = {"sub": f"{dataset}/{key}", "exp": expires}
     return jwt.encode(
         data, settings.secret_key, algorithm=settings.access_token_algorithm
     )

@@ -1,6 +1,6 @@
 from typing import Optional
 
-# from anystore.io import smart_read
+from anystore.io import smart_read
 from anystore.model import StoreModel
 from pydantic import BaseModel, HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -31,6 +31,7 @@ class ArchiveSettings(BaseSettings):
     uri: str | None = None
     archive: ArchiveModel | None = None
     cache: StoreModel | None = None
+    cache_prefix: str = "leakrfc"
 
 
 class ApiContactSettings(BaseModel):
@@ -51,7 +52,7 @@ class ApiSettings(BaseSettings):
     access_token_algorithm: str = "HS256"
 
     title: str = "LeakRFC Api"
-    description: str = ""  # smart_read("./README.md", mode="r")
+    description: str = smart_read("./README.md", mode="r")
     contact: ApiContactSettings | None = None
 
     allowed_origin: Optional[HttpUrl] = "http://localhost:3000"

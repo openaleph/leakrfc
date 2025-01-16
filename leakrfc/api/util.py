@@ -1,4 +1,3 @@
-from anystore import anycache
 from anystore.store.fs import DoesNotExist
 from anystore.util import clean_dict
 from fastapi import HTTPException
@@ -7,7 +6,6 @@ from pydantic import BaseModel
 
 from leakrfc import __version__
 from leakrfc.archive import archive
-from leakrfc.archive.cache import get_cache
 from leakrfc.logging import get_logger
 from leakrfc.model import File
 from leakrfc.settings import Settings
@@ -18,17 +16,14 @@ DEFAULT_ERROR = HTTPException(404)
 BASE_HEADER = {"x-leakrfc-version": __version__}
 
 
-def get_base_header(dataset: str, key: str | None = None) -> dict[str, str]:
-    return clean_dict(
-        {**BASE_HEADER, "x-leakrfc-dataset": dataset, "x-leakrfc-key": key}
-    )
-
-
 def get_file_header(file: File) -> dict[str, str]:
     return clean_dict(
         {
-            **get_base_header(file.dataset, file.content_hash),
-            "x-leakrfc-file": file.name,
+            **BASE_HEADER,
+            "x-leakrfc-dataset": file.dataset,
+            "x-leakrfc-key": file.key,
+            "x-leakrfc-sha1": file.content_hash,
+            "x-leakrfc-name": file.name,
             "x-leakrfc-size": str(file.size),
             "x-mimetype": file.mimetype,
             "content-type": file.mimetype,
@@ -62,10 +57,9 @@ class Errors:
                 raise exc
 
 
-@anycache(store=get_cache(), key_func=lambda d, k: f"api/file/{d}/{k}", model=File)
-def get_file_info(dataset: str, key: str) -> File | None:
+def get_file_info(dataset: str, key: str) -> File:
     storage = archive.get_dataset(dataset)
-    return storage.lookup_file_by_content_hash(key)
+    return storage.lookup_file(key)
 
 
 def ensure_path_context(dataset: str, key: str) -> Context:
@@ -75,7 +69,7 @@ def ensure_path_context(dataset: str, key: str) -> Context:
 
 def stream_file(ctx: Context) -> StreamingResponse:
     storage = archive.get_dataset(ctx.dataset)
-    file = storage.lookup_file_by_content_hash(ctx.key)
+    file = storage.lookup_file(ctx.key)
     return StreamingResponse(
         storage.stream_file(file),
         headers=ctx.headers,

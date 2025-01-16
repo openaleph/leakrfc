@@ -7,16 +7,18 @@ from leakrfc.crawl import crawl
 client = TestClient(app)
 
 DATASET = "test_dataset"
-KEY = "f26b980762285ab31143792df9b8d1dfa9643cb0"
+SHA1 = "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
+KEY = "testdir/test.txt"
 URL = f"{DATASET}/{KEY}"
 
 
 def _check_headers(res):
-    assert "application/pdf" in res.headers["content-type"]  # FIXME
+    assert "text/plain" in res.headers["content-type"]  # FIXME
     assert res.headers["x-leakrfc-dataset"] == DATASET
     assert res.headers["x-leakrfc-key"] == KEY
-    assert res.headers["x-leakrfc-file"] == "readme.pdf"
-    assert res.headers["x-leakrfc-size"] == "73627"
+    assert res.headers["x-leakrfc-sha1"] == SHA1
+    assert res.headers["x-leakrfc-name"] == "test.txt"
+    assert res.headers["x-leakrfc-size"] == "11"
     return True
 
 

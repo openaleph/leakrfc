@@ -19,7 +19,8 @@ import pytest
 import requests
 
 from leakrfc.archive import get_dataset
-from leakrfc.archive.dataset import DatasetArchive
+from leakrfc.archive.cache import get_cache
+from leakrfc.archive.dataset import INFO_PREFIX, DatasetArchive
 from leakrfc.crawl import crawl
 
 # from anystore import get_store
@@ -46,7 +47,13 @@ def test_dataset(tmp_path_factory) -> DatasetArchive:
 @pytest.hookimpl()
 def pytest_sessionfinish():
     p = FIXTURES_PATH / "archive" / "test_dataset" / ".leakrfc"
-    shutil.rmtree(p / "info", ignore_errors=True)
+    shutil.rmtree(p / INFO_PREFIX, ignore_errors=True)
+
+
+@pytest.fixture(autouse=True)
+def clear_memory_cache():
+    get_cache.cache_clear()
+    get_cache()._store = {}
 
 
 # https://pawamoy.github.io/posts/local-http-server-fake-files-testing-purposes/

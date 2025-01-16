@@ -1,9 +1,10 @@
 from moto import mock_aws
-from pantomime import PLAIN
+from rigour.mime.types import PLAIN
 
 from leakrfc.archive import get_archive, get_dataset
 from leakrfc.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
 from leakrfc.crawl import crawl
+from leakrfc.model import ArchiveModel, DatasetModel
 from tests.conftest import setup_s3
 
 
@@ -19,9 +20,6 @@ def _test_dataset(dataset: DatasetArchive | ReadOnlyDatasetArchive):
 
     key = "utf.txt"
     content_hash = "5a6acf229ba576d9a40b09292595658bbb74ef56"
-
-    # lookup by content hash
-    assert dataset.lookup_file_by_content_hash(content_hash) == dataset.lookup_file(key)
 
     # lookup by key
     assert dataset.exists(key)
@@ -44,6 +42,17 @@ def test_archive_datasets():
 
 
 def test_archive_dataset(test_dataset):
+    assert test_dataset.config.leakrfc == ArchiveModel(**test_dataset.model_dump())
+    test_dataset.make_index()
+
+    # FIXME intervals key
+    config1 = test_dataset.config.model_dump()
+    config2 = test_dataset._storage.get(
+        test_dataset._get_index_path(), model=DatasetModel
+    ).model_dump()
+    del config1["intervals"]
+    del config2["intervals"]
+    assert config1 == config2
     assert _test_dataset(test_dataset)
 
 

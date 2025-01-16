@@ -3,12 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from leakrfc import __version__
-from leakrfc.api.auth import (
-    Token,
-    create_access_token,
-    ensure_auth_context,
-    ensure_token_context,
-)
+from leakrfc.api.auth import Token, create_access_token, ensure_auth_context
 from leakrfc.api.util import Context, Errors, ensure_path_context, stream_file
 from leakrfc.archive import get_archive
 from leakrfc.logging import get_logger
@@ -38,8 +33,9 @@ log.info(f"Archive: `{archive._storage.uri}`")
 
 
 if settings.debug:
+    log.warning("Api is running in debug mode!")
 
-    @app.get("/{dataset}/{key}/token")
+    @app.get("/{dataset}/{key:path}/token")
     async def get_token(
         response: Response,
         ctx: Context = Depends(ensure_path_context),
@@ -78,7 +74,7 @@ async def get_file_by_token(
         return stream_file(ctx)
 
 
-@app.head("/{dataset}/{key}")
+@app.head("/{dataset}/{key:path}")
 async def head_file(
     response: Response, ctx: Context = Depends(ensure_path_context)
 ) -> None:
@@ -89,22 +85,10 @@ async def head_file(
         response.headers.update(ctx.headers)
 
 
-@app.get("/{dataset}/{key}", response_model=None)
+@app.get("/{dataset}/{key:path}", response_model=None)
 async def get_file(ctx: Context = Depends(ensure_path_context)) -> StreamingResponse:
     """
     Stream contents of a public file
-    """
-    with Errors():
-        return stream_file(ctx)
-
-
-@app.get("/api/2/archive", response_model=None)
-async def legacy_aleph_api(
-    ctx: Context = Depends(ensure_token_context),
-) -> StreamingResponse:
-    """
-    Stream contents of a file, mimic Aleph servicelayer api to act as a drop-in
-    replacement
     """
     with Errors():
         return stream_file(ctx)

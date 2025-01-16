@@ -7,6 +7,7 @@ import fsspec
 import yaml
 from anystore import get_store as _get_store
 from anystore.store import Store, ZipStore
+from ftmq.model import Catalog, Dataset
 
 from leakrfc.logging import get_logger
 from leakrfc.model import ArchiveModel
@@ -70,3 +71,13 @@ class Archive(BaseArchive):
             dataset = Path(child).name
             if self._storage.exists(f"{dataset}/{self.metadata_prefix}"):
                 yield self.get_dataset(dataset)
+
+    def make_catalog(self, collect_stats: bool | None = False) -> Catalog:
+        datasets = []
+        for dataset in self.get_datasets():
+            ds = Dataset(
+                name=dataset.name,
+                from_uri=dataset.make_index(collect_stats=collect_stats),
+            )
+            datasets.append(ds)
+        return Catalog(**self.model_dump(), datasets=datasets)

@@ -1,25 +1,26 @@
-import csv
 from datetime import datetime
-from io import StringIO
-from typing import Any, ClassVar, Generator, Self, TypeAlias
+from typing import Any, Generator, Literal, Self, TypeAlias
 
 from anystore.mixins import BaseModel
 from anystore.model import StoreModel
 from anystore.store import get_store_for_uri
 from anystore.store.base import Stats
 from anystore.types import Uri
-from anystore.util import make_data_checksum
+from anystore.util import SCHEME_FILE, make_data_checksum, name_from_uri
+from ftmq.model import Dataset
 from ftmq.util import make_proxy
 from nomenklatura.dataset import DefaultDataset
 from nomenklatura.entity import CE
-from pantomime import DEFAULT
 from pydantic import field_validator, model_validator
+from rigour.mime import DEFAULT
 
-from leakrfc.util import guess_mimetype
+from leakrfc.util import guess_mimetype, mime_to_schema
 
 ORIGIN_ORIGINAL = "original"
 ORIGIN_EXTRACTED = "extracted"
 ORIGIN_CONVERTED = "converted"
+
+Origins: TypeAlias = Literal["original", "extracted", "converted"]
 
 
 class ArchiveModel(BaseModel):
@@ -30,11 +31,36 @@ class ArchiveModel(BaseModel):
     storage: StoreModel | None = None
 
 
-class File(Stats):
+class DatasetModel(Dataset):
+    leakrfc: ArchiveModel = ArchiveModel()
+
+
+class AbstractFileModel:
+    def to_proxy(self) -> CE:
+        proxy = make_proxy(
+            {"id": self.id, "schema": mime_to_schema(self.mimetype)},
+            dataset=self.dataset,
+        )
+        proxy.add("contentHash", self.content_hash)
+        proxy.add("fileName", self.name)
+        proxy.add("fileSize", self.size)
+        proxy.add("mimeType", self.mimetype)
+        return proxy
+
+    @property
+    def id(self) -> str:
+        return (
+            f"{self.dataset}-file-{make_data_checksum((self.key, self.content_hash))}"
+        )
+
+
+class File(Stats, AbstractFileModel):
     dataset: str
     content_hash: str
     mimetype: str | None = None
     processed: datetime | None = None
+    origin: Origins = ORIGIN_ORIGINAL
+    source_file: str | None = None
     extra: dict[str, Any] = {}
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
@@ -43,22 +69,12 @@ class File(Stats):
             data["origin"] = self.origin
         return data
 
-    def to_proxy(self) -> CE:
-        proxy = make_proxy({"id": self.id, "schema": "Document"}, dataset=self.dataset)
-        proxy.add("contentHash", self.content_hash)
-        proxy.add("fileName", self.name)
-        proxy.add("fileSize", self.size)
-        proxy.add("mimeType", self.mimetype)
-        return proxy
-
     def to_document(self) -> "Document":
         return Document.from_file(self)
 
     @property
-    def id(self) -> str:
-        return (
-            f"{self.dataset}-file-{make_data_checksum((self.key, self.content_hash))}"
-        )
+    def is_local(self) -> bool:
+        return self.uri.startswith(SCHEME_FILE)
 
     @classmethod
     def from_info(cls, info: Stats, dataset: str, **data) -> Self:
@@ -89,21 +105,7 @@ class File(Stats):
         return self
 
 
-class OriginalFile(File):
-    origin: ClassVar = ORIGIN_ORIGINAL
-
-
-class ExtractedFile(File):
-    origin: ClassVar = ORIGIN_EXTRACTED
-    archive: str
-
-
-class ConvertedFile(File):
-    origin: ClassVar = ORIGIN_CONVERTED
-    root: str
-
-
-class Document(BaseModel):
+class Document(BaseModel, AbstractFileModel):
     dataset: str
     key: str
     content_hash: str
@@ -112,28 +114,9 @@ class Document(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    def to_csv(self) -> str:
-        io = StringIO()
-        writer = csv.writer(io)
-        writer.writerow(
-            (
-                self.key,
-                self.content_hash,
-                self.size,
-                self.mimetype,
-                self.created_at.isoformat(),
-                self.updated_at.isoformat(),
-            )
-        )
-        return io.getvalue().strip()
-
-    @classmethod
-    def from_csv(cls, line: str, dataset: str) -> Self:
-        io = StringIO(line)
-        for row in csv.reader(io):
-            data = dict(zip(cls.model_fields.keys(), [None, *row]))
-            data["dataset"] = dataset
-            return cls(**data)
+    @property
+    def name(self) -> str:
+        return name_from_uri(self.key)
 
     @field_validator("created_at", mode="before")
     @classmethod
@@ -150,6 +133,5 @@ class Document(BaseModel):
         return cls(**file.model_dump())
 
 
-OriginalFiles: TypeAlias = Generator[OriginalFile, None, None]
 Files: TypeAlias = Generator[File, None, None]
 Docs: TypeAlias = Generator[Document, None, None]
