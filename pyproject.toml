@@ -1,6 +1,6 @@
 [project]
 name = "leakrfc"
-version = "0.0.3"
+version = "0.0.4"
 description = "Data standard, storage and retrieval for leaks and document collections"
 authors = [{ name = "Simon Wörpel", email = "simon.woerpel@pm.me" }]
 license = "AGPLv3+"
