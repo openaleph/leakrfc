@@ -1,6 +1,6 @@
 from typing import Optional
 
-from anystore.io import smart_read
+from anystore.io import DoesNotExist, smart_read
 from anystore.model import StoreModel
 from pydantic import BaseModel, HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -40,6 +40,13 @@ class ApiContactSettings(BaseModel):
     email: str | None
 
 
+def get_api_doc() -> str:
+    try:
+        return smart_read("./README.md", "r")
+    except DoesNotExist:
+        return ""
+
+
 class ApiSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="leakrfc_api_",
@@ -52,7 +59,7 @@ class ApiSettings(BaseSettings):
     access_token_algorithm: str = "HS256"
 
     title: str = "LeakRFC Api"
-    description: str = smart_read("./README.md", mode="r")
+    description: str = get_api_doc()
     contact: ApiContactSettings | None = None
 
     allowed_origin: Optional[HttpUrl] = "http://localhost:3000"
