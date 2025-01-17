@@ -4,7 +4,7 @@ api:
 	LEAKRFC_ARCHIVE__URI=./tests/fixtures/archive DEBUG=1 uvicorn leakrfc.api:app --reload --port 5000
 
 install:
-	poetry install --with dev
+	poetry install --with dev --all-extras
 
 lint:
 	poetry run flake8 leakrfc --count --select=E9,F63,F7,F82 --show-source --statistics
