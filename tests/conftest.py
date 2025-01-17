@@ -40,7 +40,7 @@ def test_dataset(tmp_path_factory) -> DatasetArchive:
     tmp_path = tmp_path_factory.mktemp("test-archive")
     tmp_path.mkdir(parents=True, exist_ok=True)
     dataset = get_dataset("test_dataset", uri=tmp_path / "archive")
-    crawl(FIXTURES_PATH / "src", dataset, use_cache=False)
+    crawl(FIXTURES_PATH / "src", dataset)
     return dataset
 
 

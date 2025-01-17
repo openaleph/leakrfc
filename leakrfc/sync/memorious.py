@@ -93,10 +93,7 @@ class MemoriousWorker(DatasetWorker):
 
 
 def import_memorious(
-    dataset: DatasetArchive,
-    uri: Uri,
-    key_func: Callable | None = None,
-    use_cache: bool | None = True,
+    dataset: DatasetArchive, uri: Uri, key_func: Callable | None = None
 ) -> MemoriousStatus:
     """
     Convert a "memorious collection" (the output format of the store->directory
@@ -118,10 +115,9 @@ def import_memorious(
             listing
         key_func: A function to generate file keys (their relative paths), per
             default it is generated from the source url.
-        use_cache: Use global processing cache to skip tasks
     """
 
-    worker = MemoriousWorker(uri, key_func, dataset=dataset, use_cache=use_cache)
+    worker = MemoriousWorker(uri, key_func, dataset=dataset)
     worker.log_info(f"Starting memorious import from `{worker.memorious.uri}` ...")
     return worker.run()
 

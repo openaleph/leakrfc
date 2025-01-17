@@ -147,13 +147,10 @@ def sync_to_aleph(
     api_key: str | None,
     prefix: str | None = None,
     foreign_id: str | None = None,
-    use_cache: bool | None = True,
     metadata: bool | None = True,
 ) -> AlephUploadStatus:
     """
     Incrementally sync a leakrfc dataset into an Aleph instance.
-
-    As long as using `use_cache`, only new documents will be imported.
 
     Args:
         dataset: leakrfc Dataset instance
@@ -161,7 +158,6 @@ def sync_to_aleph(
         api_key: Aleph api key (can be set via env `ALEPHCLIENT_API_KEY`)
         prefix: Add a folder prefix to import documents into
         foreign_id: Aleph collection foreign_id (if different from leakrfc dataset name)
-        use_cache: Use global processing cache to skip tasks
         metadata: Update Aleph collection metadata
     """
     worker = AlephUploadWorker(
@@ -170,7 +166,6 @@ def sync_to_aleph(
         api_key=api_key,
         prefix=prefix,
         foreign_id=foreign_id,
-        use_cache=use_cache,
         metadata=metadata,
     )
     worker.log_info(f"Starting sync to Aleph `{worker.host}` ...")

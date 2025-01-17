@@ -113,7 +113,6 @@ class MakeWorker(DatasetWorker):
 
 def make_dataset(
     dataset: DatasetArchive,
-    use_cache: bool | None = True,
     check_integrity: bool | None = True,
     cleanup: bool | None = True,
     metadata_only: bool | None = False,
@@ -129,7 +128,6 @@ def make_dataset(
 
     Args:
         dataset: leakrfc Dataset instance
-        use_cache: Use global processing cache to skip tasks
         check_integrity: Check checksum for each file (logs mismatches)
         cleanup: When checking integrity, fix mismatched metadata and delete
             unreferenced metadata files
@@ -137,7 +135,5 @@ def make_dataset(
             for new source files
 
     """
-    worker = MakeWorker(
-        check_integrity, cleanup, metadata_only, dataset, use_cache=use_cache
-    )
+    worker = MakeWorker(check_integrity, cleanup, metadata_only, dataset)
     return worker.run()

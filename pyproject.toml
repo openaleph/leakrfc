@@ -72,4 +72,5 @@ LEAKRFC_URI = "tests/fixtures/archive.yml"
 AWS_SECRET_ACCESS_KEY = "leakrfc"
 AWS_ACCESS_KEY_ID = "leakrfc"
 DEBUG = 1
+CACHE = 0
 FSSPEC_S3_ENDPOINT_URL = ""

@@ -159,7 +159,6 @@ def cli_diff(
 @cli.command("make")
 def cli_make(
     out_uri: Annotated[str, typer.Option("-o")] = "-",
-    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
     check_integrity: Annotated[
         Optional[bool], typer.Option(help="Check checksums")
     ] = True,
@@ -181,9 +180,7 @@ def cli_make(
             dataset.make_index()
             obj = dataset._storage.get(dataset._get_index_path(), model=DatasetModel)
         else:
-            obj = make_dataset(
-                dataset, use_cache, check_integrity, cleanup, metadata_only
-            )
+            obj = make_dataset(dataset, check_integrity, cleanup, metadata_only)
         write_obj(obj, out_uri)
 
 
@@ -242,7 +239,6 @@ def cli_crawl(
     out_uri: Annotated[
         str, typer.Option("-o", help="Write results to this destination")
     ] = "-",
-    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
     skip_existing: Annotated[
         Optional[bool],
         typer.Option(
@@ -276,7 +272,6 @@ def cli_crawl(
             crawl(
                 uri,
                 dataset,
-                use_cache=use_cache,
                 skip_existing=skip_existing,
                 extract=extract,
                 extract_keep_source=extract_keep_source,
@@ -300,7 +295,6 @@ def cli_export(out: str):
 @memorious.command("sync")
 def cli_sync_memorious(
     uri: Annotated[str, typer.Option("-i")],
-    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
     name_only: Annotated[
         Optional[bool], typer.Option(help="Use only file name as key")
     ] = False,
@@ -323,13 +317,12 @@ def cli_sync_memorious(
             key_func = get_file_name_templ_func(key_template)
         else:
             key_func = None
-        res = import_memorious(dataset, uri, key_func, use_cache=use_cache)
+        res = import_memorious(dataset, uri, key_func)
         write_obj(res, "-")
 
 
 @aleph.command("sync")
 def cli_aleph_sync(
-    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
     host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
     api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
     folder: Annotated[Optional[str], typer.Option(help="Base folder path")] = None,
@@ -350,7 +343,6 @@ def cli_aleph_sync(
             api_key=api_key,
             prefix=folder,
             foreign_id=foreign_id,
-            use_cache=use_cache,
             metadata=metadata,
         )
         write_obj(res, "-")
@@ -359,7 +351,6 @@ def cli_aleph_sync(
 @aleph.command("load-dataset")
 def cli_aleph_load_dataset(
     uri: Annotated[str, typer.Argument(help="Dataset index.json uri")],
-    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
     host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
     api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
     foreign_id: Annotated[
@@ -378,7 +369,6 @@ def cli_aleph_load_dataset(
             host=host,
             api_key=api_key,
             foreign_id=foreign_id,
-            use_cache=use_cache,
             metadata=metadata,
         )
         write_obj(res, "-")
@@ -395,7 +385,6 @@ def cli_aleph_load_catalog(
     #     Optional[list[str]],
     #     typer.Argument(help="Dataset foreign_ids to exclude, can be a glob"),
     # ] = None,
-    use_cache: Annotated[Optional[bool], typer.Option(help="Use runtime cache")] = True,
     host: Annotated[Optional[str], typer.Option(help="Aleph host")] = None,
     api_key: Annotated[Optional[str], typer.Option(help="Aleph api key")] = None,
     metadata: Annotated[
@@ -412,7 +401,6 @@ def cli_aleph_load_catalog(
             api_key=api_key,
             # include_dataset=include_dataset,
             # exclude_dataset=exclude_dataset,
-            use_cache=use_cache,
             metadata=metadata,
         ):
             write_obj(res, "-")

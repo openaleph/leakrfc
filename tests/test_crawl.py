@@ -6,14 +6,14 @@ from leakrfc.model import ORIGIN_EXTRACTED
 def test_crawl(tmp_path, fixtures_path):
     url = "http://localhost:8000/src"
     dataset = get_dataset("test", uri=tmp_path / "test1")
-    crawl(url, dataset, use_cache=False)
+    crawl(url, dataset)
     files1 = [f for f in dataset.iter_files(use_db=False)]
     assert len(files1) == 74
     files1 = [f for f in dataset.iter_files()]
     assert len(files1) == 74
 
     dataset = get_dataset("test", uri=tmp_path / "test2")
-    crawl(fixtures_path / "src", dataset, use_cache=False)
+    crawl(fixtures_path / "src", dataset)
     files2 = [f for f in dataset.iter_files()]
     assert len(files2) == 74
 
@@ -31,12 +31,7 @@ def test_crawl(tmp_path, fixtures_path):
 def test_crawl_extract(tmp_path, fixtures_path):
     # default
     dataset = get_dataset("test0", uri=tmp_path / "test0")
-    res = crawl(
-        fixtures_path / "src",
-        dataset,
-        extract=True,
-        use_cache=False,
-    )
+    res = crawl(fixtures_path / "src", dataset, extract=True)
     assert res.extracted == 28
     assert res.packages == 4
     assert res.done == 74
@@ -56,7 +51,6 @@ def test_crawl_extract(tmp_path, fixtures_path):
         dataset,
         extract=True,
         extract_ensure_subdir=True,
-        use_cache=False,
     )
     assert res.extracted == 28
     assert res.packages == 4
@@ -68,7 +62,7 @@ def test_crawl_extract(tmp_path, fixtures_path):
 
     url = "http://localhost:8000/src"
     dataset = get_dataset("test2", uri=tmp_path / "test2")
-    res = crawl(url, dataset, extract=True, extract_ensure_subdir=True, use_cache=False)
+    res = crawl(url, dataset, extract=True, extract_ensure_subdir=True)
     assert res.extracted == 28
     assert res.packages == 4
     assert res.extracted + res.done - res.packages == len(
@@ -86,7 +80,6 @@ def test_crawl_extract_keep(tmp_path, fixtures_path):
         extract=True,
         extract_keep_source=True,
         extract_ensure_subdir=True,
-        use_cache=False,
     )
     assert res.extracted == 28
     assert res.packages == 4
@@ -104,7 +97,6 @@ def test_crawl_extract_keep(tmp_path, fixtures_path):
         extract=True,
         extract_keep_source=True,
         extract_ensure_subdir=True,
-        use_cache=False,
     )
     assert res.extracted == 28
     assert res.packages == 4
@@ -117,7 +109,7 @@ def test_crawl_extract_keep(tmp_path, fixtures_path):
 
 def test_crawl_globs(tmp_path, fixtures_path):
     dataset = get_dataset("test", uri=tmp_path / "test3")
-    res = crawl(fixtures_path / "src", dataset, use_cache=False, include="*.pdf")
+    res = crawl(fixtures_path / "src", dataset, include="*.pdf")
     assert res.done == 12
-    res = crawl(fixtures_path / "src", dataset, use_cache=False, exclude="*.pdf")
+    res = crawl(fixtures_path / "src", dataset, exclude="*.pdf")
     assert res.done == 74 - 12

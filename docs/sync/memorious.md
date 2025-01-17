@@ -1,6 +1,6 @@
 Import [memorious](https://github.com/alephdata/memorious) crawler results into a `leakrfc` dataset.
 
-As long as using `--use-cache` (default) only new documents are synced.
+As long as using the global cache (environment `CACHE=1`, default) only new documents are synced.
 
 ```bash
 leakrfc -d my_dataset memorious sync -i /memorious/data/store/my_dataset
@@ -16,7 +16,7 @@ leakrfc -d my_dataset memorious sync -i /memorious/data/store/my_dataset --name-
 leakrfc -d my_dataset memorious sync -i /memorious/data/store/my_dataset --strip-prefix "assets/docs"
 ```
 
-Or use a template that will replace values from the original memorious "*.json" file for the source file. Given a json file stored by memorious like this:
+Or use a template that will replace values from the original memorious "\*.json" file for the source file. Given a json file stored by memorious like this:
 
 ```json
 {
@@ -48,7 +48,6 @@ To import this file as "2022/05/Berlin/Beratungsvorgang/19-11840.pdf":
 ```bash
 leakrfc -d my_dataset memorious sync -i /memorious/data/store/my_dataset --key-template "{{ date[:4] }}/{{ date[5:7] }}/{{ state }}/{{ category }}/{{ reference.replace('/','-') }}.{{ url.split('.')[-1] }}"
 ```
-
 
 ## Reference
 

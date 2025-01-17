@@ -138,7 +138,6 @@ def crawl(
     extract: bool | None = False,
     extract_keep_source: bool | None = False,
     extract_ensure_subdir: bool | None = False,
-    use_cache: bool | None = True,
     write_documents_db: bool | None = True,
     exclude: str | None = None,
     include: str | None = None,
@@ -157,7 +156,6 @@ def crawl(
         extract_ensure_subdir: Make sub-directories for extracted files with the
             archive name to avoid overwriting existing files during extraction
             of multiple archives with the same directory structure
-        use_cache: Use global processing cache to skip tasks
         write_documents_db: Create csv-based document tables at the end of crawl run
         exclude: Exclude glob for file paths not to crawl
         include: Include glob for file paths to crawl
@@ -180,7 +178,6 @@ def crawl(
         extract=extract,
         extract_keep_source=extract_keep_source,
         extract_ensure_subdir=extract_ensure_subdir,
-        use_cache=use_cache,
         write_documents_db=write_documents_db,
         exclude=exclude,
         include=include,

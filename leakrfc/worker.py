@@ -20,18 +20,13 @@ leakrfc_settings = ArchiveSettings()
 
 
 def make_cache_key(worker: "DatasetWorker", action: str, *extra: str) -> str | None:
-    if not worker.use_cache:
-        return
     return f"{leakrfc_settings.cache_prefix}/{worker.dataset.name}/{action}/{'/'.join(extra)}"
 
 
 class DatasetWorker(Worker):
-    def __init__(
-        self, dataset: "DatasetArchive", use_cache: bool | None = True, *args, **kwargs
-    ) -> None:
+    def __init__(self, dataset: "DatasetArchive", *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.dataset = dataset
-        self.use_cache = use_cache
 
     def get_tasks(self) -> Any:
         yield from self.dataset.iter_files()
