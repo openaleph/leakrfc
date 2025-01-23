@@ -68,4 +68,8 @@ def test_sync_memorious(fixtures_path, tmp_path, monkeypatch):
         get_file_name_strip_func("en/request")(data)
         == "14928/response/55317/attach/5/Communication from the Commission SG 2009 D 51604.pdf"
     )
+    assert (
+        get_file_name_strip_func("foo/bar")(data)
+        == "en/request/14928/response/55317/attach/5/Communication from the Commission SG 2009 D 51604.pdf"
+    )
     assert get_file_name_templ_func("{{ headers.Server }}.pdf")(data) == "nginx.pdf"

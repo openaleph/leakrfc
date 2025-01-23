@@ -138,7 +138,12 @@ def get_file_name_templ_func(tmpl: str) -> Callable:
 
 
 def get_file_name_strip_func(strip_prefix: str) -> Callable:
+    strip_prefix = strip_prefix.strip("/")
+
     def _func(data: dict[str, Any]) -> str:
-        return get_file_key(data)[len(strip_prefix) :].strip("/")
+        key = get_file_key(data)
+        if key.startswith(strip_prefix):
+            key = key[len(strip_prefix) :].strip("/")
+        return key
 
     return _func
