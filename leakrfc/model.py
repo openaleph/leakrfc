@@ -17,10 +17,9 @@ from rigour.mime import DEFAULT
 from leakrfc.util import guess_mimetype, mime_to_schema
 
 ORIGIN_ORIGINAL = "original"
-ORIGIN_EXTRACTED = "extracted"
 ORIGIN_CONVERTED = "converted"
 
-Origins: TypeAlias = Literal["original", "extracted", "converted"]
+Origins: TypeAlias = Literal["original", "converted"]
 
 
 class ArchiveModel(BaseModel):
