@@ -5,7 +5,7 @@ from anystore.model import StoreModel
 from pydantic import BaseModel, HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from leakrfc.model import ArchiveModel
+from ftm_datalake.model import ArchiveModel
 
 
 class Settings(BaseSettings):
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
 class ArchiveSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="leakrfc_",
+        env_prefix="ftm_datalake_",
         env_nested_delimiter="__",
         nested_model_default_partial_update=True,
         # cli_parse_args=True
@@ -31,7 +31,7 @@ class ArchiveSettings(BaseSettings):
     uri: str | None = None
     archive: ArchiveModel | None = None
     cache: StoreModel | None = None
-    cache_prefix: str = "leakrfc"
+    cache_prefix: str = "ftm_datalake"
 
 
 class ApiContactSettings(BaseModel):
@@ -49,7 +49,7 @@ def get_api_doc() -> str:
 
 class ApiSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="leakrfc_api_",
+        env_prefix="ftm_datalake_api_",
         env_nested_delimiter="__",
         nested_model_default_partial_update=True,
     )

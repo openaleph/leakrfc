@@ -1,19 +1,19 @@
-Import [memorious](https://github.com/alephdata/memorious) crawler results into a `leakrfc` dataset.
+Import [memorious](https://github.com/alephdata/memorious) crawler results into a `ftm-datalake` dataset.
 
 As long as using the global cache (environment `CACHE=1`, default) only new documents are synced.
 
 ```bash
-leakrfc -d my_dataset memorious sync -i /memorious/data/store/my_dataset
+ftm-datalake -d my_dataset memorious sync -i /memorious/data/store/my_dataset
 ```
 
 File paths can be set via a `key_func` function or via command line:
 
 ```bash
 # use only the file names without their path:
-leakrfc -d my_dataset memorious sync -i /memorious/data/store/my_dataset --name-only
+ftm-datalake -d my_dataset memorious sync -i /memorious/data/store/my_dataset --name-only
 
 # strip a prefix from the original relative file urls:
-leakrfc -d my_dataset memorious sync -i /memorious/data/store/my_dataset --strip-prefix "assets/docs"
+ftm-datalake -d my_dataset memorious sync -i /memorious/data/store/my_dataset --strip-prefix "assets/docs"
 ```
 
 Or use a template that will replace values from the original memorious "\*.json" file for the source file. Given a json file stored by memorious like this:
@@ -46,9 +46,9 @@ Or use a template that will replace values from the original memorious "\*.json"
 To import this file as "2022/05/Berlin/Beratungsvorgang/19-11840.pdf":
 
 ```bash
-leakrfc -d my_dataset memorious sync -i /memorious/data/store/my_dataset --key-template "{{ date[:4] }}/{{ date[5:7] }}/{{ state }}/{{ category }}/{{ reference.replace('/','-') }}.{{ url.split('.')[-1] }}"
+ftm-datalake -d my_dataset memorious sync -i /memorious/data/store/my_dataset --key-template "{{ date[:4] }}/{{ date[5:7] }}/{{ state }}/{{ category }}/{{ reference.replace('/','-') }}.{{ url.split('.')[-1] }}"
 ```
 
 ## Reference
 
-::: leakrfc.sync.memorious
+::: ftm_datalake.sync.memorious

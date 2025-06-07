@@ -1,7 +1,7 @@
 import pytest
 from rigour.mime.types import DEFAULT, HTML, PDF, WORD
 
-from leakrfc import util
+from ftm_datalake import util
 
 
 def test_util():

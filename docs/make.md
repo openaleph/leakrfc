@@ -1,12 +1,12 @@
 This generates or updates a dataset archive. This command should be used after files were added or deleted from the archive.
 
-The process can also be used to turn any existing directory or remote location into a `leakrfc` dataset.
+The process can also be used to turn any existing directory or remote location into a `ftm-datalake` dataset.
 
 ```
-leakrfc -d my_dataset make [OPTIONS]
+ftm-datalake -d my_dataset make [OPTIONS]
 ```
 
 
 ## Reference
 
-::: leakrfc.make
+::: ftm_datalake.make

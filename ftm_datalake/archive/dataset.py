@@ -10,10 +10,10 @@ from anystore.util import DEFAULT_HASH_ALGORITHM, clean_dict
 from ftmq.model.coverage import Collector
 from nomenklatura.entity import CE
 
-from leakrfc.archive.base import BaseArchive
-from leakrfc.archive.documents import Documents
-from leakrfc.logging import get_logger
-from leakrfc.model import ArchiveModel, DatasetModel, File, Files
+from ftm_datalake.archive.base import BaseArchive
+from ftm_datalake.archive.documents import Documents
+from ftm_datalake.logging import get_logger
+from ftm_datalake.model import ArchiveModel, DatasetModel, File, Files
 
 log = get_logger(__name__)
 
@@ -77,7 +77,7 @@ class ReadOnlyDatasetArchive(BaseArchive):
         uri = self._get_config_path()
         if not self._storage.exists(uri):
             return DatasetModel(
-                name=self.name, leakrfc=ArchiveModel(**self.model_dump())
+                name=self.name, ftm_datalake=ArchiveModel(**self.model_dump())
             )
         uri = self._storage.get_key(self._get_config_path())
         return DatasetModel.from_yaml_uri(uri)
@@ -121,7 +121,7 @@ class DatasetArchive(ReadOnlyDatasetArchive):
     ) -> File:
         """Add the given file to the archive. This doesn't check for existing
         files or if the given `file.content_hash` is correct. This should be
-        handled in higher logic, as seen in `leakrfc.make.make_dataset`."""
+        handled in higher logic, as seen in `ftm_datalake.make.make_dataset`."""
 
         uri = from_uri or file.uri
 

@@ -1,5 +1,5 @@
-from leakrfc.archive import get_dataset
-from leakrfc.crawl import crawl
+from ftm_datalake.archive import get_dataset
+from ftm_datalake.crawl import crawl
 
 
 def test_crawl(tmp_path, fixtures_path):

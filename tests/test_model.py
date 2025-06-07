@@ -4,7 +4,7 @@ from ftmq.model import Dataset
 from nomenklatura.dataset import DefaultDataset
 from rigour.mime.types import PLAIN
 
-from leakrfc.model import ORIGIN_ORIGINAL, DatasetModel, File
+from ftm_datalake.model import ORIGIN_ORIGINAL, DatasetModel, File
 
 
 def test_model():
@@ -38,7 +38,7 @@ def test_model():
 
 
 def test_model_dataset(fixtures_path):
-    config = fixtures_path / "archive/test_dataset/.leakrfc/config.yml"
+    config = fixtures_path / "archive/test_dataset/.ftm_datalake/config.yml"
     dataset = DatasetModel.from_yaml_uri(config)
     assert isinstance(dataset, Dataset)
     assert Dataset(**dataset.model_dump())

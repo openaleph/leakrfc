@@ -14,9 +14,9 @@ from ftmq.io import smart_read_proxies
 from ftmq.model import Catalog, Dataset, Resource
 from rigour.mime.types import FTM
 
-from leakrfc.archive import get_dataset
-from leakrfc.archive.cache import get_cache
-from leakrfc.connectors.aleph import (
+from ftm_datalake.archive import get_dataset
+from ftm_datalake.archive.cache import get_cache
+from ftm_datalake.connectors.aleph import (
     AlephDatasetWorker,
     make_aleph_cache_key,
     update_collection_metadata,

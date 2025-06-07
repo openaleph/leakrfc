@@ -1,7 +1,7 @@
 from anystore import get_store
 
-from leakrfc.archive import get_dataset
-from leakrfc.sync.memorious import (
+from ftm_datalake.archive import get_dataset
+from ftm_datalake.sync.memorious import (
     MemoriousWorker,
     get_file_key,
     get_file_name,

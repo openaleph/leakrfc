@@ -1,10 +1,10 @@
 from moto import mock_aws
 from rigour.mime.types import PLAIN
 
-from leakrfc.archive import get_archive, get_dataset
-from leakrfc.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
-from leakrfc.crawl import crawl
-from leakrfc.model import ArchiveModel, DatasetModel
+from ftm_datalake.archive import get_archive, get_dataset
+from ftm_datalake.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
+from ftm_datalake.crawl import crawl
+from ftm_datalake.model import ArchiveModel, DatasetModel
 from tests.conftest import setup_s3
 
 
@@ -42,7 +42,7 @@ def test_archive_datasets():
 
 
 def test_archive_dataset(test_dataset):
-    assert test_dataset.config.leakrfc == ArchiveModel(**test_dataset.model_dump())
+    assert test_dataset.config.ftm_datalake == ArchiveModel(**test_dataset.model_dump())
     test_dataset.make_index()
 
     # FIXME intervals key
@@ -64,7 +64,9 @@ def test_archive_dataset(test_dataset):
 
 
 def test_archive_zip_dataset(fixtures_path):
-    dataset = get_dataset("test_dataset", uri=fixtures_path / "test_dataset.leakrfc")
+    dataset = get_dataset(
+        "test_dataset", uri=fixtures_path / "test_dataset.ftm_datalake"
+    )
     assert _test_dataset(dataset)
 
 
@@ -76,6 +78,6 @@ def test_archive_zip_dataset(fixtures_path):
 # @mock_aws
 # def test_archive_s3_dataset(fixtures_path):
 #     setup_s3()
-#     dataset = get_dataset("test_dataset", uri="s3://leakrfc", path_prefix=False)
+#     dataset = get_dataset("test_dataset", uri="s3://ftm_datalake", path_prefix=False)
 #     crawl(fixtures_path / "src", dataset)
 #     assert _test_dataset(dataset)

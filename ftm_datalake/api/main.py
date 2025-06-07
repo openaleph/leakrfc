@@ -2,12 +2,12 @@ from fastapi import Depends, FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from leakrfc import __version__
-from leakrfc.api.auth import Token, create_access_token, ensure_auth_context
-from leakrfc.api.util import Context, Errors, ensure_path_context, stream_file
-from leakrfc.archive import get_archive
-from leakrfc.logging import get_logger
-from leakrfc.settings import ApiSettings, Settings
+from ftm_datalake import __version__
+from ftm_datalake.api.auth import Token, create_access_token, ensure_auth_context
+from ftm_datalake.api.util import Context, Errors, ensure_path_context, stream_file
+from ftm_datalake.archive import get_archive
+from ftm_datalake.logging import get_logger
+from ftm_datalake.settings import ApiSettings, Settings
 
 log = get_logger(__name__)
 

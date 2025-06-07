@@ -6,7 +6,7 @@ RUN apt-get -qq -y autoremove && apt-get clean
 
 RUN pip install --no-cache-dir -q -U pip setuptools
 
-COPY leakrfc /src/leakrfc
+COPY ftm-datalake /src/ftm-datalake
 COPY setup.py /src/setup.py
 # COPY requirements.txt /src/requirements.txt
 COPY README.md /src/README.md
@@ -20,4 +20,4 @@ WORKDIR /src
 RUN pip install --no-cache-dir -q "."
 RUN pip install --no-cache-dir -q -U redis sqlalchemy psycopg2-binary
 
-ENTRYPOINT ["leakrfc"]
+ENTRYPOINT ["ftm-datalake"]

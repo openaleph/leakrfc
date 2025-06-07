@@ -9,12 +9,12 @@ from anystore.types import StrGenerator, Uri
 from anystore.util import make_data_checksum
 from anystore.worker import WorkerStatus
 
-from leakrfc.archive import DatasetArchive
-from leakrfc.archive.cache import get_cache
-from leakrfc.logging import get_logger
-from leakrfc.model import File
-from leakrfc.util import render
-from leakrfc.worker import DatasetWorker, make_cache_key
+from ftm_datalake.archive import DatasetArchive
+from ftm_datalake.archive.cache import get_cache
+from ftm_datalake.logging import get_logger
+from ftm_datalake.model import File
+from ftm_datalake.util import render
+from ftm_datalake.worker import DatasetWorker, make_cache_key
 
 log = get_logger(__name__)
 
@@ -97,7 +97,7 @@ def import_memorious(
 ) -> MemoriousStatus:
     """
     Convert a "memorious collection" (the output format of the store->directory
-    stage) into a leakrfc dataset
+    stage) into a ftm_datalake dataset
 
     memorious store:
         ```
@@ -106,11 +106,11 @@ def import_memorious(
             ./<sha1>.json              # metadata file
         ```
 
-    The memorious json metadata for each file will be stored in the leakrfc
+    The memorious json metadata for each file will be stored in the ftm_datalake
     metadata at the `extra` property for each file.
 
     Args:
-        dataset: leakrfc Dataset instance
+        dataset: ftm_datalake Dataset instance
         uri: local or remote location of the memorious store that supports file
             listing
         key_func: A function to generate file keys (their relative paths), per

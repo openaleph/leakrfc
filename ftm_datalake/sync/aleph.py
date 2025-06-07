@@ -1,5 +1,5 @@
 """
-Sync Aleph collections into leakrfc or vice versa via `alephclient`
+Sync Aleph collections into ftm_datalake or vice versa via `alephclient`
 """
 
 from datetime import datetime
@@ -13,10 +13,10 @@ from anystore.types import SDict
 from anystore.worker import WorkerStatus
 from banal import ensure_dict
 
-from leakrfc.archive.cache import get_cache
-from leakrfc.archive.dataset import DatasetArchive
-from leakrfc.connectors import aleph
-from leakrfc.model import File
+from ftm_datalake.archive.cache import get_cache
+from ftm_datalake.archive.dataset import DatasetArchive
+from ftm_datalake.connectors import aleph
+from ftm_datalake.model import File
 
 
 def make_upload_cache_key(self: "AlephUploadWorker", file: File) -> str | None:
@@ -150,14 +150,14 @@ def sync_to_aleph(
     metadata: bool | None = True,
 ) -> AlephUploadStatus:
     """
-    Incrementally sync a leakrfc dataset into an Aleph instance.
+    Incrementally sync a ftm_datalake dataset into an Aleph instance.
 
     Args:
-        dataset: leakrfc Dataset instance
+        dataset: ftm_datalake Dataset instance
         host: Aleph host (can be set via env `ALEPHCLIENT_HOST`)
         api_key: Aleph api key (can be set via env `ALEPHCLIENT_API_KEY`)
         prefix: Add a folder prefix to import documents into
-        foreign_id: Aleph collection foreign_id (if different from leakrfc dataset name)
+        foreign_id: Aleph collection foreign_id (if different from ftm_datalake dataset name)
         metadata: Update Aleph collection metadata
     """
     worker = AlephUploadWorker(

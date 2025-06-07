@@ -9,11 +9,11 @@ from anystore import get_store as _get_store
 from anystore.store import Store, ZipStore
 from ftmq.model import Catalog, Dataset
 
-from leakrfc.logging import get_logger
-from leakrfc.model import ArchiveModel
+from ftm_datalake.logging import get_logger
+from ftm_datalake.model import ArchiveModel
 
 if TYPE_CHECKING:
-    from leakrfc.archive.dataset import DatasetArchive
+    from ftm_datalake.archive.dataset import DatasetArchive
 
 
 log = get_logger(__name__)
@@ -24,7 +24,7 @@ OPTS = {"serialization_mode": "raw"}
 
 def get_store(**kwargs) -> Store | ZipStore:
     uri = kwargs.get("uri")
-    if uri and os.path.splitext(uri)[1] == ".leakrfc":
+    if uri and os.path.splitext(uri)[1] == ".ftm_datalake":
         return ZipStore(**kwargs)
     return _get_store(**kwargs)
 
@@ -51,7 +51,7 @@ class Archive(BaseArchive):
     """
 
     def get_dataset(self, dataset: str) -> "DatasetArchive":
-        from leakrfc.archive.dataset import DatasetArchive
+        from ftm_datalake.archive.dataset import DatasetArchive
 
         config_uri = f"{dataset}/{self.metadata_prefix}/config.yml"
         config = {}

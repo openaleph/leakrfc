@@ -3,10 +3,10 @@
 # from anystore.store import ZipStore
 # from anystore.types import Uri
 
-# from leakrfc.archive import Archive
-# from leakrfc.logging import get_logger
-# from leakrfc.model import File
-# from leakrfc.util import make_ch_key
+# from ftm_datalake.archive import Archive
+# from ftm_datalake.logging import get_logger
+# from ftm_datalake.model import File
+# from ftm_datalake.util import make_ch_key
 
 # log = get_logger(__name__)
 
@@ -19,7 +19,7 @@
 #         proxies += orjson.dumps(
 #             info.to_proxy().to_dict(), option=orjson.OPT_APPEND_NEWLINE
 #         )
-#         meta_key = f".leakrfc/meta/{make_ch_key(info.content_hash)}"
+#         meta_key = f".ftm_datalake/meta/{make_ch_key(info.content_hash)}"
 #         out.put(meta_key, info, model=File)
 #         log.info(
 #             f"Adding file `{info.name} ({info.content_hash})` metadata ...",
@@ -28,4 +28,4 @@
 #         )
 #         with out.open(info.key, mode="wb") as o:
 #             o.write(i.read())
-#     out.put(".leakrfc/entities/entities.ftm.json", proxies)
+#     out.put(".ftm_datalake/entities/entities.ftm.json", proxies)

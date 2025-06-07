@@ -1,6 +1,6 @@
-from leakrfc.archive import get_dataset
-from leakrfc.crawl import crawl
-from leakrfc.make import make_dataset
+from ftm_datalake.archive import get_dataset
+from ftm_datalake.crawl import crawl
+from ftm_datalake.make import make_dataset
 
 
 def test_make(fixtures_path, tmp_path):
@@ -11,7 +11,7 @@ def test_make(fixtures_path, tmp_path):
     assert res.integrity_errors == 0
 
     # delete a file info reference
-    dataset._storage.delete(".leakrfc/meta/utf.txt/info.json")
+    dataset._storage.delete(".ftm_datalake/meta/utf.txt/info.json")
     res = make_dataset(dataset)
     assert res.files_total == 74
     assert res.files_added == 1

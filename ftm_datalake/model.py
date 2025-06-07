@@ -6,15 +6,14 @@ from anystore.model import StoreModel
 from anystore.store import get_store_for_uri
 from anystore.store.base import Stats
 from anystore.types import Uri
-from anystore.util import SCHEME_FILE, guess_mimetype, make_data_checksum, name_from_uri
+from anystore.util import SCHEME_FILE, make_data_checksum, name_from_uri
 from ftmq.model import Dataset
 from ftmq.util import make_proxy
 from nomenklatura.dataset import DefaultDataset
 from nomenklatura.entity import CE
 from pydantic import field_validator, model_validator
-from rigour.mime import DEFAULT
 
-from leakrfc.util import mime_to_schema
+from ftm_datalake.util import mime_to_schema
 
 ORIGIN_ORIGINAL = "original"
 ORIGIN_CONVERTED = "converted"
@@ -24,14 +23,14 @@ Origins: TypeAlias = Literal["original", "converted"]
 
 class ArchiveModel(BaseModel):
     uri: str | None = None
-    metadata_prefix: str = ".leakrfc"
+    metadata_prefix: str = ".ftm_datalake"
     public_url: str | None = None
     checksum_algorithm: str = "sha1"
     storage: StoreModel | None = None
 
 
 class DatasetModel(Dataset):
-    leakrfc: ArchiveModel = ArchiveModel()
+    ftm_datalake: ArchiveModel = ArchiveModel()
 
 
 class AbstractFileModel:
@@ -56,7 +55,6 @@ class AbstractFileModel:
 class File(Stats, AbstractFileModel):
     dataset: str
     content_hash: str
-    mimetype: str | None = None
     processed: datetime | None = None
     origin: Origins = ORIGIN_ORIGINAL
     source_file: str | None = None
@@ -87,17 +85,6 @@ class File(Stats, AbstractFileModel):
         store, uri = get_store_for_uri(uri)
         return cls.from_info(store.info(uri), dataset, **data)
 
-    @classmethod
-    @field_validator("mimetype")
-    def normalize_mimetype(cls, v: Any) -> str | None:
-        return guess_mimetype(v)
-
-    @model_validator(mode="after")
-    def assign_mimetype(self):
-        if self.mimetype in (None, DEFAULT):
-            self.mimetype = guess_mimetype(self.name) or DEFAULT
-        return self
-
     @model_validator(mode="after")
     def ensure_updated_at(self):
         self.updated_at = self.updated_at or self.created_at
@@ -109,7 +96,6 @@ class Document(BaseModel, AbstractFileModel):
     key: str
     content_hash: str
     size: int
-    mimetype: str
     created_at: datetime
     updated_at: datetime
 

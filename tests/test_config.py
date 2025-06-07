@@ -1,6 +1,6 @@
 from anystore.store import MemoryStore
 
-from leakrfc.archive import Archive, configure_archive, get_archive, get_dataset
+from ftm_datalake.archive import Archive, configure_archive, get_archive, get_dataset
 
 
 def test_config(fixtures_path, monkeypatch, tmp_path):
@@ -10,7 +10,7 @@ def test_config(fixtures_path, monkeypatch, tmp_path):
     assert archive._storage.uri.endswith("tests/fixtures/archive")
     assert archive._storage.serialization_mode == "raw"
     assert archive.checksum_algorithm == "sha1"
-    assert archive.metadata_prefix == ".leakrfc"
+    assert archive.metadata_prefix == ".ftm_datalake"
 
     # overwrite some settings
     # monkeypatch.setenv("LEAKRFC_STORE__URI", "other-files")
@@ -30,12 +30,12 @@ def test_config(fixtures_path, monkeypatch, tmp_path):
     dataset = get_dataset("test_dataset", uri="foo")
     assert dataset._storage.uri.endswith("foo")
 
-    archive = get_archive(tmp_path / "foo.leakrfc")
+    archive = get_archive(tmp_path / "foo.ftm_datalake")
     assert archive.is_zip
     dataset = archive.get_dataset("test")
     assert dataset._storage.uri == archive._storage.uri
     assert dataset._make_path() == "test"
 
-    dataset = get_dataset("test_dataset", tmp_path / "foo2.leakrfc")
+    dataset = get_dataset("test_dataset", tmp_path / "foo2.ftm_datalake")
     assert dataset.is_zip
     assert dataset._make_path() == "test_dataset"

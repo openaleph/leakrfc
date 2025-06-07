@@ -15,9 +15,9 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 
-from leakrfc.api.util import DEFAULT_ERROR, Context, ensure_path_context
-from leakrfc.logging import get_logger
-from leakrfc.settings import ApiSettings
+from ftm_datalake.api.util import DEFAULT_ERROR, Context, ensure_path_context
+from ftm_datalake.logging import get_logger
+from ftm_datalake.settings import ApiSettings
 
 settings = ApiSettings()
 log = get_logger(__name__)

@@ -3,9 +3,9 @@ from anystore.types import StrGenerator, Uri
 from anystore.worker import WorkerStatus
 from fsspec.implementations.zip import zipfile
 
-from leakrfc.archive import DatasetArchive
-from leakrfc.logging import get_logger
-from leakrfc.worker import DatasetWorker
+from ftm_datalake.archive import DatasetArchive
+from ftm_datalake.logging import get_logger
+from ftm_datalake.worker import DatasetWorker
 
 log = get_logger(__name__)
 

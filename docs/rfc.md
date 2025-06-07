@@ -1,87 +1,190 @@
-The aim of `leakrfc` is to provide a standardized and client agnostic way to share document collections and their metadata across systems. Collections must be syncable with standard tools (e.g. rsync, s3, ...) Therefore, no specific storage backend for metadata will be used. Every information needed is just stored in files.
+# FollowTheMoney Data Lake Spec
 
-Keeping the original file tree as is and storing all metadata in the subfolder `.leakrfc`, tenants of an archive don't even need to use the library to consume files.
+This specification defines a data lake structure for use with [OpenAleph](https://openaleph.org), [OpenSanctions](https://opensanctions.org) and related systems. The idea to to produce a long-term storage mechanism for investigative graph data, both in source, intermediate and processed form.
 
-The _RFC_ is reflected by the following layout structure for a _Dataset_:
+## Core concepts
+
+- `Datasets` are logical units of source data, often representing a data origin, such as an official register or publication, or a leak of documents.
+- `Data catalogs` are index files that help make indiviudal datasets more easily discoverable.
+- `Entity files` are data files in which individual [FollowTheMoney](https://followthemoney.tech) entities are stored in a ready-to-index form, ie. they've been aggregated from fragments or statements. An indexer may need to add authorization information and apply denormalisations as needed.
+- `Archive objects` are files that represent source or intermediate document formats used in document forensics. They're referenced from FtM entities via their SHA1 content checksum.
+
+
+## Function
+
+The idea of a FtM data lake is to provide a platform for multi-stage processing of data into FtM format. Keeping this data at rest (rather than, for example, in an Aleph operational database, and in `followthemoney-store`) promises modularity, simpler architecture, and cost effectiveness.
+
+The fundamental idea is to have a convention-based file system layout with well-known paths for metadata, and for information interchange between different processing stages.
+
+
+## Basic layout
+
+A data lake file system may need to be able to hold metadata headers (e.g. `Content-Disposition`, `Content-Type`), so its better to think of this as object storage (S3, GCS, MinIO) than a plain operating system FS.
 
 ```bash
-./archive/
-    my_dataset/  # the subfolder name is the `foreign_id` of a dataset
+datasets/
+    catalog.json
+    [name]/
+        index.json
+        versions/
+            index-[ts]-[uuid].json
 
-        # metadata maintained by `leakrfc`
-        .leakrfc/
-            index.json      # generated dataset metadata served for clients
-            config.yml      # dataset configuration
-            documents.csv   # document database (all metadata combined)
-            size            # current sum of file size in bytes
-            state/          # OPTIONAL processing state
-                logs/
-                created_at
-                updated_at
-            entities/       # OPTIONAL followthemoney entities for this dataset
-                entities.ftm.json
-            meta/                            # FILE METADATA STORAGE:
-                .../File.doc/info.json       # - file metadata as json REQUIRED
-                .../File.doc/txt             # - extracted plain text
-                .../File.doc/converted.pdf   # - converted file, e.g. from .docx to .pdf for better web display
-            export/         # OPTIONAL
-                my_dataset.img.zst         # dump as image
-                my_dataset.leakrfc         # dump as zipfile
+        .LOCK
+        # If present, a crucial write operation is currently
+        # happening by one of the daemons. Contains timestamp of
+        # start, anticipated end, and tolerance.
 
-        # actual source data
-        File.doc
-        Arbitrary Folder/
-            Source1.pdf
-            Tables/
-                Another_File.xlsx
+        archive/
+            # sha1 is full file name, not `data` like in `servicelayer`:
+            00/de/ad/beef123456789012345678901234567890
+
+            # optional: file metadata (e.g. scraped headers)
+            00/de/ad/beef123456789012345678901234567890.json
+
+            # text-only representation (e.g. from an ocr process); convenient
+            # for non-Aleph analytics on file system
+            00/de/ad/beef123456789012345678901234567890.txt
+
+        mappings/
+            [uuid-1]/
+                mapping.yml
+                sheet1.csv
+                sheet2.csv
+
+        entities/
+            # idea for storing UI-generated entities:
+            crud/
+                [entity_id]/
+                    # sortable IDs:
+                    [uuid-1].json
+
+                    # missing `current.json` implies entity is deleted
+                    current.json
+            # append-only file fragments from ingest-file, bulk upload, etc:
+            statements/
+                [origin-1]/
+                    [uuid-1].csv
+                    [uuid-2].csv
+                [origin-2]/
+                    [uuid-3].csv
+                # Instead of `origin`, are these `phase`, `stage`?
+
+            # generated by an aggregator batch job on `statements/`:
+            entities.ftm.json
+
+            # generated by a vectorizing service
+            entities.vectors.json  # {"id": <entity_id>, "data": <...>}
+
+            # for delta generation:
+            entities.hash
+
+            # Alternative:
+            aggregates/
+                [run_id]/
+                    .BEGIN  # timestamp as content
+                    entities.ftm.json
+                    .DONE  # timestamp as content
+
+        xref/
+            # Theoretical, but an inverted index for xref entity
+            # blocking:
+            xref.idx
+
+        # generated by an aggregator batch job on entities and archives:
+        # some of them are optional and subject to specific use cases/applications
+        exports/
+            statistics.json   # entity counts, pre-computed facets
+            graph.cypher  # neo 4j
+            statements.csv  # complete sorted statements
+            documents.csv  # document metadata
+            inverted.idx  # what entity IDs point to entity X
+
+            # for UI rendering in apps (e.g. OpenAleph)
+            files.json  # nested file graph (folder -> subfolder -> file)
+            emails.json   # nested/resolved email entity graph
+
+            archive.zstd
+            # diff exports
+            replay/  # ??
+                statements.[from-date]-[to-date].csv.diff
+                entities.[from-date]-[to-date].ftm.json.diff
 ```
 
-## Metadata
+Some thoughts on this:
 
-Documents metadata is stored in the `.leakrfc/documents.csv` file.
+- The entity data is not versioned here. In OpenSanctions, we're actually using a subfolder called `artifacts/[run_id]` to identify different ETL runs. This may not apply as well to Aleph, since it has no strong segregation of individual ETL runs.
+- This still doesn't have a nice way to do garbage collection on the archive without refcounting on entities.
+- We may want the entity object structure in the lake to be a new format, e.g. with a `dataset` field and `statements` lists on each entity (instead of `properties`).
 
-```csv
-key,content_hash,size,mimetype,created_at,updated_at
-106972554.pdf,54d6cd29c71713bd8b2b3c1267f13a4ab15e7c94,208679,application/pdf,2024-09-29 22:52:24.613038,2024-09-29 22:52:24.613038
-500 pages.pdf,3e193f218e1dc0ae0f9f972da6d5da45b0abf59f,302661,application/pdf,2024-09-29 22:52:24.613038,2024-09-29 22:52:24.613038
-```
+## Meet the daemons
 
-This csv file is the aggregation of the json metadata stored for each file path in the `.leakrfc/meta/<path>` folder.
+### Entity aggregator
 
-For example: `.leakrfc/meta/slides.ppt/info.json`
+A service that would traverse all individual statement files in the `entities/statements` folder, sort them into a combined order and then emit aggregated FtM entities.
 
-```json
-{
-  "created_at": "2024-09-29T22:52:24.673038",
-  "updated_at": "2024-09-29T22:52:24.673038",
-  "size": 148992,
-  "name": "slides.ppt",
-  "store": "/tests/fixtures/archive/test_dataset",
-  "key": "slides.ppt",
-  "dataset": "test_dataset",
-  "content_hash": "08883b398cc03686df724621624f432d5d052bd4",
-  "mimetype": "application/vnd.ms-powerpoint",
-  "processed": null,
-  "origin": "original",
-  "source_file": null,
-  "extra": {}
-}
-```
+Ideas: DuckDB doing a big fat UNION on the CSV files right from the bucket, or some monstrous Java MapReduce/Spark thing that is good at sorting a terabyte without breaking a sweat. (Output does not have to be FtM entities - a combined & sorted `statements.csv` has the same effect of making the data indexable).
 
-Arbitrary data can be stored in the `extra` key (or directly at the top level of the json object if it doesn't infer with the required metadata).
+See also:
 
-## Tracking updates
+- `ftm4 aggregate-statements` command reading sorted statements to emit entities.
 
-Each run of [crawl](./crawl.md), [make](./make.md) or other _adapters_ operations will update the documents metadata csv and produce a _diff_ from the current and last csv file with the changes. This follows the [unified diff format](https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html) so that clients can consume the changes and e.g. only process or import documents recently added.
+### Entity analyzer
 
-Example of a `documents.csv.<timestamp>.diff` file:
+A service that would read `entities.ftm.json` and does analysis on (a filtered, subset of) the entities, e.g. NER, language detection, translations, vectorization. New statements are chunked and written back to the lake.
 
-```
----     2025-01-05T01:40:10.639414
+These micro services are already built with this lake concept in mind:
 
-+++     2025-01-15T13:32:49.955291
+- [ftm-analyze](https://docs.investigraph.dev/lib/ftm-analyze/)
+- [ftm-geocode](https://docs.investigraph.dev/lib/ftm-geocode/)
+- [ftm-transcribe](https://github.com/openaleph/ftm-transcribe)
+- [ftm-assets](https://github.com/dataresearchcenter/ftm-assets)
 
-@@ -62,0 +63 @@
+### Entity indexer
 
-+test-documents.rar,9a377a36f36bff1c5de651b8f3162ae93c0fa4b1,67945,application/vnd.rar,2024-12-21 14:56:33.412859,2024-12-21 14:56:33.412859
-```
+    logstash -j128 -i s3://lake/[dataset]/entities.ftm.json
+
+### File ingestor
+
+Reads uploaded documents from `entities/crud` (?) and then drops statement files into the statement folder every 60 MB (or after each document?).
+
+If the backend supports notifications (eg. via SQS, PubSub), then the act of dropping a file to one `origin`/`phase` folder could trigger the subsequent layer of processing.
+
+- cf. https://min.io/docs/minio/linux/administration/monitoring/bucket-notifications.html
+
+### Catalog collector
+
+Goes through each dataset folder, and brings a reduced version of the dataset metadata into a big overview `catalog.json`. This then pretty directly travels into the `collections` Aleph database.
+
+- Example: https://data.opensanctions.org/datasets/latest/index.json
+
+## Concept for user edits (3rd party apps)
+
+An app, e.g. for Network Diagrams, would fetch the complete `entities.ftm.json`, load it in a temporary store (e.g. DuckDB) and do read/write operations on it. After an edit session, the resulting store is exported back to the lake.
+
+## Implementation stages
+
+- FtM 4.0 with dataset and catalog metadata specs
+- Make sure lake FS change notifications can be used for stage coupling
+- Build an `followthemoney-store` dumper
+- Find migration path for servicelayer `archive`
+
+## Long-term implications
+
+- This creates a flat-file alternative to `followthemoney-store`, using an external sorting mechanism to aggregate entity fragments.
+- The `entities/crud/` section implicitly unifies the `document` and `entity` tables currently used in Aleph.
+    - Introduces versioning - nice in WYSIWYG scenarios.
+- No need to have `collection` table, index and `catalog.json`.
+- While we're at it, mappings become flat files (as is right and proper) and can be run by a daemon.
+- Lake folders can be copied between Aleph instances, making repeat processing (eg. leaks) unnecessary.
+- Re-indexing gains a huge performance boost (no sorting `followthemoney-store` tables, efficient bulk indexing).
+- Option for file-based inverted index building that can allow hi-performance cross-referencing (xref)
+- Improved infrastructure cost-efficiency as `followthemoney-store` postgresql (and therefore SSD storage) is obsolete
+
+## References
+
+The outlined concept above is the result of a decade of open source tooling around this problem. A lot of experimental and production work has already been done within the FollowTheMoney/Aleph open source ecosystem:
+
+- [servicelayer](https://github.com/alephdata/servicelayer/) as the core document storage layer for Aleph/OpenAleph
+- [nomenklatura](https://github.com/opensanctions/nomenklatura) by [OpenSanctions](https://opensanctions.org) for the statement based entities model
+- [anystore](https://docs.investigraph.dev/lib/anystore/) by [DARC](https://darc.li) as a generic key/value storage that can act both as a blob (file) storage backend or caching backend
+- [leakrfc](https://docs.investigraph.dev/lib/leakrfc/) by [DARC](https://darc.li) that was a first experiment for a standardized way of storing distributed file archives that Aleph, OpenAleph, memorious and other clients can read and write to.

@@ -5,13 +5,13 @@ from anystore.model import StoreModel
 from anystore.types import Uri
 from anystore.util import ensure_uri
 
-from leakrfc.archive.base import Archive
-from leakrfc.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
+from ftm_datalake.archive.base import Archive
+from ftm_datalake.archive.dataset import DatasetArchive, ReadOnlyDatasetArchive
 
 
 def configure_archive(**kwargs) -> Archive:
     """change config during tests runtime"""
-    from leakrfc.settings import ArchiveSettings
+    from ftm_datalake.settings import ArchiveSettings
 
     settings = ArchiveSettings()
     if settings.uri is not None:

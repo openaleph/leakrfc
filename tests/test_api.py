@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 
-from leakrfc.api import app
-from leakrfc.archive import get_dataset
-from leakrfc.crawl import crawl
+from ftm_datalake.api import app
+from ftm_datalake.archive import get_dataset
+from ftm_datalake.crawl import crawl
 
 client = TestClient(app)
 
@@ -14,11 +14,11 @@ URL = f"{DATASET}/{KEY}"
 
 def _check_headers(res):
     assert "text/plain" in res.headers["content-type"]  # FIXME
-    assert res.headers["x-leakrfc-dataset"] == DATASET
-    assert res.headers["x-leakrfc-key"] == KEY
-    assert res.headers["x-leakrfc-sha1"] == SHA1
-    assert res.headers["x-leakrfc-name"] == "test.txt"
-    assert res.headers["x-leakrfc-size"] == "11"
+    assert res.headers["x-ftm-datalake-dataset"] == DATASET
+    assert res.headers["x-ftm-datalake-key"] == KEY
+    assert res.headers["x-ftm-datalake-sha1"] == SHA1
+    assert res.headers["x-ftm-datalake-name"] == "test.txt"
+    assert res.headers["x-ftm-datalake-size"] == "11"
     return True
 
 
@@ -26,7 +26,7 @@ def test_api(fixtures_path, monkeypatch):
     dataset = get_dataset(DATASET)
     crawl(fixtures_path / "src", dataset)
 
-    from leakrfc.api.util import settings
+    from ftm_datalake.api.util import settings
 
     monkeypatch.setattr(settings, "debug", False)
     # production mode always raises 404 on any errors

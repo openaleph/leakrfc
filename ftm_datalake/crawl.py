@@ -13,11 +13,11 @@ from anystore.types import Uri
 from anystore.worker import WorkerStatus
 from banal import ensure_dict
 
-from leakrfc.archive import DatasetArchive
-from leakrfc.archive.cache import get_cache
-from leakrfc.logging import get_logger
-from leakrfc.model import ORIGIN_ORIGINAL, File, Origins
-from leakrfc.worker import DatasetWorker, make_cache_key
+from ftm_datalake.archive import DatasetArchive
+from ftm_datalake.archive.cache import get_cache
+from ftm_datalake.logging import get_logger
+from ftm_datalake.model import ORIGIN_ORIGINAL, File, Origins
+from ftm_datalake.worker import DatasetWorker, make_cache_key
 
 log = get_logger(__name__)
 
@@ -117,11 +117,11 @@ def crawl(
     source_file: File | None = None,
 ) -> CrawlStatus:
     """
-    Crawl a local or remote location of documents into a leakrfc dataset.
+    Crawl a local or remote location of documents into a ftm_datalake dataset.
 
     Args:
         uri: local or remote location uri that supports file listing
-        dataset: leakrfc Dataset instance
+        dataset: ftm_datalake Dataset instance
         skip_existing: Don't re-crawl existing keys (doesn't check for checksum)
         write_documents_db: Create csv-based document tables at the end of crawl run
         exclude: Exclude glob for file paths not to crawl

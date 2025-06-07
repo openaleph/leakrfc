@@ -3,14 +3,14 @@ from functools import cache
 from anystore import get_store
 from anystore.store import BaseStore
 
-from leakrfc.logging import configure_logging, get_logger
+from ftm_datalake.logging import configure_logging, get_logger
 
 log = get_logger(__name__)
 
 
 @cache
 def get_cache() -> BaseStore:
-    from leakrfc.settings import ArchiveSettings
+    from ftm_datalake.settings import ArchiveSettings
 
     settings = ArchiveSettings()
     if settings.cache is not None:

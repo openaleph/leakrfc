@@ -7,19 +7,19 @@ from anystore.util import clean_dict
 from pydantic import BaseModel
 from rich.console import Console
 
-from leakrfc import __version__
-from leakrfc.archive import configure_archive, get_dataset
-from leakrfc.archive.dataset import DatasetArchive
-from leakrfc.crawl import crawl
-from leakrfc.exceptions import ImproperlyConfigured
-from leakrfc.export import export_dataset
-from leakrfc.logging import configure_logging
-from leakrfc.make import make_dataset
-from leakrfc.model import DatasetModel
-from leakrfc.settings import ArchiveSettings, Settings
-from leakrfc.sync.aleph import sync_to_aleph
-from leakrfc.sync.aleph_entities import load_catalog, load_dataset
-from leakrfc.sync.memorious import (
+from ftm_datalake import __version__
+from ftm_datalake.archive import configure_archive, get_dataset
+from ftm_datalake.archive.dataset import DatasetArchive
+from ftm_datalake.crawl import crawl
+from ftm_datalake.exceptions import ImproperlyConfigured
+from ftm_datalake.export import export_dataset
+from ftm_datalake.logging import configure_logging
+from ftm_datalake.make import make_dataset
+from ftm_datalake.model import DatasetModel
+from ftm_datalake.settings import ArchiveSettings, Settings
+from ftm_datalake.sync.aleph import sync_to_aleph
+from ftm_datalake.sync.aleph_entities import load_catalog, load_dataset
+from ftm_datalake.sync.memorious import (
     get_file_name,
     get_file_name_strip_func,
     get_file_name_templ_func,
@@ -79,7 +79,7 @@ class Dataset(ErrorHandler):
 
 
 @cli.callback(invoke_without_command=True)
-def cli_leakrfc(
+def cli_ftm_datalake(
     version: Annotated[Optional[bool], typer.Option(..., help="Show version")] = False,
     dataset: Annotated[
         str | None, typer.Option("-d", help="Dataset foreign_id")
@@ -173,7 +173,7 @@ def cli_make(
     ] = False,
 ):
     """
-    Make or update a leakrfc dataset and check integrity
+    Make or update a ftm_datalake dataset and check integrity
     """
     with Dataset() as dataset:
         if dataset_metadata_only:
@@ -306,7 +306,7 @@ def cli_sync_memorious(
     ] = None,
 ):
     """
-    Sync a memorious data store into a leakrfc dataset
+    Sync a memorious data store into a ftm_datalake dataset
     """
     with Dataset() as dataset:
         if name_only:
@@ -334,7 +334,7 @@ def cli_aleph_sync(
     ] = True,
 ):
     """
-    Sync a leakrfc dataset to Aleph
+    Sync a ftm_datalake dataset to Aleph
     """
     with Dataset() as dataset:
         res = sync_to_aleph(

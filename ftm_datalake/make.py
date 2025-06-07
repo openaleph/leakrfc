@@ -1,5 +1,5 @@
 """
-Make or update a leakrfc dataset and check integrity
+Make or update a ftm_datalake dataset and check integrity
 """
 
 from datetime import datetime
@@ -9,9 +9,9 @@ from anystore.decorators import anycache
 from anystore.exceptions import DoesNotExist
 from anystore.worker import WorkerStatus
 
-from leakrfc.archive.cache import get_cache
-from leakrfc.archive.dataset import DatasetArchive
-from leakrfc.worker import DatasetWorker, make_cache_key
+from ftm_datalake.archive.cache import get_cache
+from ftm_datalake.archive.dataset import DatasetArchive
+from ftm_datalake.worker import DatasetWorker, make_cache_key
 
 
 class MakeStatus(WorkerStatus):
@@ -118,7 +118,7 @@ def make_dataset(
     metadata_only: bool | None = False,
 ) -> MakeStatus:
     """
-    Make or update a leakrfc dataset and optionally check its integrity.
+    Make or update a ftm_datalake dataset and optionally check its integrity.
 
     Per default, this iterates through all the source files and creates (or
     updates) file metadata json files.
@@ -127,7 +127,7 @@ def make_dataset(
     created.
 
     Args:
-        dataset: leakrfc Dataset instance
+        dataset: ftm_datalake Dataset instance
         check_integrity: Check checksum for each file (logs mismatches)
         cleanup: When checking integrity, fix mismatched metadata and delete
             unreferenced metadata files

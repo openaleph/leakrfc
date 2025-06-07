@@ -1,9 +1,9 @@
-from leakrfc.archive import get_archive
-from leakrfc.export import export_dataset
+from ftm_datalake.archive import get_archive
+from ftm_datalake.export import export_dataset
 
 
 def test_export(tmp_path, test_dataset):
-    out = tmp_path / "test_dataset.leakrfc"
+    out = tmp_path / "test_dataset.ftm_datalake"
     export_dataset(test_dataset, out)
 
     # verify

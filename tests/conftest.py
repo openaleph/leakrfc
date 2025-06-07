@@ -18,10 +18,10 @@ import botocore.model
 import pytest
 import requests
 
-from leakrfc.archive import get_dataset
-from leakrfc.archive.cache import get_cache
-from leakrfc.archive.dataset import INFO_PREFIX, DatasetArchive
-from leakrfc.crawl import crawl
+from ftm_datalake.archive import get_dataset
+from ftm_datalake.archive.cache import get_cache
+from ftm_datalake.archive.dataset import INFO_PREFIX, DatasetArchive
+from ftm_datalake.crawl import crawl
 
 # from anystore import get_store
 # from anystore.mirror import mirror
@@ -46,7 +46,7 @@ def test_dataset(tmp_path_factory) -> DatasetArchive:
 
 @pytest.hookimpl()
 def pytest_sessionfinish():
-    p = FIXTURES_PATH / "archive" / "test_dataset" / ".leakrfc"
+    p = FIXTURES_PATH / "archive" / "test_dataset" / ".ftm_datalake"
     shutil.rmtree(p / INFO_PREFIX, ignore_errors=True)
 
 
@@ -82,9 +82,9 @@ def http_server():
 
 def setup_s3():
     s3 = boto3.resource("s3", region_name="us-east-1")
-    s3.create_bucket(Bucket="leakrfc")
+    s3.create_bucket(Bucket="ftm_datalake")
     # from_store = get_store(uri=FIXTURES_PATH / "src", serialization_mode="raw")
-    # to_store = get_store(uri="s3://leakrfc", serialization_mode="raw")
+    # to_store = get_store(uri="s3://ftm_datalake", serialization_mode="raw")
     # mirror(from_store, to_store)
 
 

@@ -16,13 +16,13 @@ from anystore.io import DoesNotExist, logged_items
 from anystore.types import StrGenerator
 from ftmq.types import CEGenerator
 
-from leakrfc.archive.cache import get_cache
-from leakrfc.logging import get_logger
-from leakrfc.model import Docs, Document
-from leakrfc.settings import ArchiveSettings
+from ftm_datalake.archive.cache import get_cache
+from ftm_datalake.logging import get_logger
+from ftm_datalake.model import Docs, Document
+from ftm_datalake.settings import ArchiveSettings
 
 if TYPE_CHECKING:
-    from leakrfc.archive import DatasetArchive
+    from ftm_datalake.archive import DatasetArchive
 
 log = get_logger(__name__)
 settings = ArchiveSettings()

@@ -1,30 +1,26 @@
-[![leakrfc on pypi](https://img.shields.io/pypi/v/leakrfc)](https://pypi.org/project/leakrfc/)
-[![Python test and package](https://github.com/investigativedata/leakrfc/actions/workflows/python.yml/badge.svg)](https://github.com/investigativedata/leakrfc/actions/workflows/python.yml)
+[![ftm-datalake on pypi](https://img.shields.io/pypi/v/ftm-datalake)](https://pypi.org/project/ftm-datalake/)
+[![Python test and package](https://github.com/dataresearchcenter/ftm-datalake/actions/workflows/python.yml/badge.svg)](https://github.com/dataresearchcenter/ftm-datalake/actions/workflows/python.yml)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
-[![Coverage Status](https://coveralls.io/repos/github/investigativedata/leakrfc/badge.svg?branch=main)](https://coveralls.io/github/investigativedata/leakrfc?branch=main)
-[![AGPLv3+ License](https://img.shields.io/pypi/l/leakrfc)](./LICENSE)
+[![Coverage Status](https://coveralls.io/repos/github/dataresearchcenter/ftm-datalake/badge.svg?branch=main)](https://coveralls.io/github/dataresearchcenter/ftm-datalake?branch=main)
+[![AGPLv3+ License](https://img.shields.io/pypi/l/ftm-datalake)](./LICENSE)
 
-# leakrfc
+# ftm-datalake
 
-"_A RFC for leaks_"
+`ftm-datalake` provides a _data standard_ and _archive storage_ for structured [FollowTheMoney](https://followthemoney.tech) data, leaked data, private and public document collections. The concepts and implementations are originally inspired by [mmmeta](https://github.com/simonwoerpel/mmmeta) and [Aleph's servicelayer archive](https://github.com/alephdata/servicelayer) and are [discussed here](https://aleph.discourse.group/t/rfc-followthemoney-data-lake-specification/276/3)
 
-[leak-rfc.org](https://leak-rfc.org)
-
-`leakrfc` provides a _data standard_ and _archive storage_ for leaked data, private and public document collections. The concepts and implementations are originally inspired by [mmmeta](https://github.com/simonwoerpel/mmmeta) and [Aleph's servicelayer archive](https://github.com/alephdata/servicelayer).
-
-`leakrfc` acts as a multi-tenant storage and retrieval mechanism for documents and their metadata. It provides a high-level interface for generating and sharing document collections and importing them into various search and analysis platforms, such as [_ICIJ Datashare_](https://datashare.icij.org/), [_Liquid Investigations_](https://github.com/liquidinvestigations/), and [_Aleph_](https://docs.aleph.occrp.org/).
+`ftm-datalake` acts as a multi-tenant storage and retrieval mechanism for structured entity data, documents and their metadata. It provides a high-level interface for generating and sharing document collections and importing them into various search and analysis platforms, such as [_ICIJ Datashare_](https://datashare.icij.org/), [_Liquid Investigations_](https://github.com/liquidinvestigations/), and [_OpenAleph_](https://openaleph.org/).
 
 ## Installation
 
 Requires python 3.11 or later.
 
 ```bash
-pip install leakrfc
+pip install ftm-datalake
 ```
 
 ## Documentation
 
-[docs.investigraph.dev/lib/leakrfc](https://docs.investigraph.dev/lib/leakrfc)
+[openaleph.org/lib/ftm-datalake](https://openaleph.org/lib/ftm-datalake)
 
 ## Development
 
@@ -44,15 +40,16 @@ Before creating a commit, this checks for correct code formatting (isort, black)
 
 ### testing
 
-`leakrfc` uses [pytest](https://docs.pytest.org/en/stable/) as the testing framework.
+`ftm-datalake` uses [pytest](https://docs.pytest.org/en/stable/) as the testing framework.
 
     make test
 
 ## License and Copyright
 
-`leakrfc`, (C) 2024 investigativedata.io
-`leakrfc`, (C) 2025 investigativedata.io
+`ftm-datalake`, (C) 2024 investigativedata.io
 
-`leakrfc` is licensed under the AGPLv3 or later license.
+`ftm-datalake`, (C) 2025 [Data and Resear Center – DARC](https://dataresearchcenter.org)
+
+`ftm-datalake` is licensed under the AGPLv3 or later license.
 
 see [NOTICE](./NOTICE) and [LICENSE](./LICENSE)

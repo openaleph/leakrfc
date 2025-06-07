@@ -5,22 +5,25 @@ from anystore.store import BaseStore, get_store_for_uri
 from anystore.store.virtual import get_virtual
 from anystore.worker import Worker
 
-from leakrfc.logging import get_logger
-from leakrfc.model import File
-from leakrfc.settings import ArchiveSettings, Settings
+from ftm_datalake.logging import get_logger
+from ftm_datalake.model import File
+from ftm_datalake.settings import ArchiveSettings, Settings
 
 if TYPE_CHECKING:
-    from leakrfc.archive.dataset import DatasetArchive
+    from ftm_datalake.archive.dataset import DatasetArchive
 
 
 log = get_logger(__name__)
 
 settings = Settings()
-leakrfc_settings = ArchiveSettings()
+ftm_datalake_settings = ArchiveSettings()
 
 
 def make_cache_key(worker: "DatasetWorker", action: str, *extra: str) -> str | None:
-    return f"{leakrfc_settings.cache_prefix}/{worker.dataset.name}/{action}/{'/'.join(extra)}"
+    return (
+        f"{ftm_datalake_settings.cache_prefix}/"
+        f"{worker.dataset.name}/{action}/{'/'.join(extra)}"
+    )
 
 
 class DatasetWorker(Worker):

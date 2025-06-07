@@ -1,4 +1,3 @@
-::: mkdocs-typer
-    :module: leakrfc.cli
-    :prog_name: leakrfc
-    :command: cli
+::: mkdocs-typer2
+    :module: ftm_datalake.cli
+    :name: ftm-datalake
