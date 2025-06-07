@@ -2,7 +2,11 @@
 name = "leakrfc"
 version = "0.0.4"
 description = "Data standard, storage and retrieval for leaks and document collections"
-authors = [{ name = "Simon Wörpel", email = "simon.woerpel@pm.me" }]
+authors = [
+    { name = "Data and Research Center", email = "hi@dataresearchcenter.org" },
+    { name = "Simon Wörpel", email = "simon.woerpel@pm.me" },
+    { name = "Friedrich Lindenberg", email = "pudo@opensanctions.org" },
+]
 license = "AGPLv3+"
 readme = "README.md"
 classifiers = [
@@ -16,12 +20,9 @@ classifiers = [
 ]
 requires-python = ">=3.11,<4"
 dependencies = [
-    "ftmq (>=0.8.0,<0.9.0)",
-    "anystore (>=0.3.0,<0.4.0)",
-    "rich (>=13.9.4,<14.0.0)",
-    "structlog (>=24.4.0,<25.0.0)",
+    "ftmq (>=0.8.5,<0.9.0)",
+    "anystore (>=0.3.5,<0.4.0)",
     "jinja2 (>=3.1.5,<4.0.0)",
-    "patool (>=3.1.0,<4.0.0)",
     "pandas (>=2.2.3,<3.0.0)",
     "alephclient (>=2.6.0,<3.0.0)",
 ]
