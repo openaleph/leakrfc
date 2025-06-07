@@ -1,6 +1,6 @@
-site_name: leakrfc
-site_url: https://docs.investigraph.dev/lib/leakrfc
-repo_url: https://github.com/investigativedata/leakrfc
+site_name: ftm-datalake
+site_url: https://openaleph.org/docs/lib/ftm-datalake
+repo_url: https://github.com/openaleph/ftm-datalake
 nav:
   - Intro: index.md
   - quickstart.md
@@ -15,11 +15,12 @@ nav:
     - sync/aleph.md
     - sync/memorious.md
   - Reference:
-      - leakrfc.cli: reference/cli.md
+      - ftm-datalake.cli: reference/cli.md
 theme:
   name: material
-  logo: https://cdn.investigativedata.org/style/logo_basic_dark.svg
-  favicon: https://cdn.investigativedata.org/style/favicon.svg
+  logo: https://cdn.investigativedata.org/style/logos/darc/svg/DARC-Logo-RGB-Horizontal-Neg.svg
+  favicon: https://cdn.investigativedata.org/style/logos/darc/favicon.ico
+  custom_dir: docs/overrides
   features:
     - navigation.instant
     - navigation.tracking
@@ -32,11 +33,13 @@ extra_css:
 extra:
   social:
     - icon: material/mail
-      link: mailto:hi@investigativedata.org
+      link: mailto:hi@dataresearchcenter.org
     - icon: material/web
-      link: https://investigativedata.io
+      link: https://dataresearchcenter.org
     - icon: material/github
-      link: https://github.com/investigativedata/leakrfc
+      link: https://github.com/openaleph/ftm-datalake
+    - icon: material/linkedin
+      link: https://www.linkedin.com/company/dataresearchcenter/
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
@@ -45,7 +48,6 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
-  - mkdocs-typer
   - pymdownx.details
   - admonition
   - pymdownx.tasklist:
@@ -53,6 +55,8 @@ markdown_extensions:
 plugins:
   - search
   - autorefs
+  - mkdocs-typer2:
+      pretty: true
   - mkdocstrings:
       default_handler: python
       handlers:

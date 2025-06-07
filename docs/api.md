@@ -1,4 +1,10 @@
-`leakrfc` provides a simpel api powered by [FastAPI](https://fastapi.tiangolo.com/) for clients to retrieve file metadata and blobs. It therefore acts as a proxy between client and archive, so that the client doesn't need to know where the actual blobs live. The api can handle authorization via [JSON Web Tokens](https://jwt.io).
+`ftm-datalake` provides a simpel api powered by [FastAPI](https://fastapi.tiangolo.com/) for clients to retrieve file metadata and blobs. It therefore acts as a proxy between client and archive, so that the client doesn't need to know where the actual blobs live. The api can handle authorization via [JSON Web Tokens](https://jwt.io).
+
+## Installation
+
+The API feature needs some extra packages that are not installed by default. Install `ftm-datalake` with api dependencies:
+
+    pip install ftm-datalake[api]
 
 ## Start local api server
 
@@ -6,7 +12,7 @@ This is for a quick testing setup:
 
 ```bash
 export LEAKRFC_URI=./data
-uvicorn leakrfc.api:app
+uvicorn ftm-datalake.api:app
 ```
 
 !!! warning
@@ -26,12 +32,12 @@ date: Thu, 16 Jan 2025 08:44:59 GMT
 server: uvicorn
 content-length: 4
 content-type: application/json
-x-leakrfc-version: 0.0.3
-x-leakrfc-dataset: test_dataset
-x-leakrfc-key: utf.txt
-x-leakrfc-sha1: 5a6acf229ba576d9a40b09292595658bbb74ef56
-x-leakrfc-name: utf.txt
-x-leakrfc-size: 19
+x-ftm-datalake-version: 0.0.3
+x-ftm-datalake-dataset: test_dataset
+x-ftm-datalake-key: utf.txt
+x-ftm-datalake-sha1: 5a6acf229ba576d9a40b09292595658bbb74ef56
+x-ftm-datalake-name: utf.txt
+x-ftm-datalake-size: 19
 x-mimetype: text/plain
 content-type: text/plain
 ```

@@ -10,9 +10,9 @@ from alephclient.settings import API_KEY, HOST
 from anystore.util import clean_dict
 from banal import ensure_list
 
-from leakrfc.logging import get_logger
-from leakrfc.model import DatasetModel
-from leakrfc.worker import DatasetWorker, make_cache_key
+from ftm_datalake.logging import get_logger
+from ftm_datalake.model import DatasetModel
+from ftm_datalake.worker import DatasetWorker, make_cache_key
 
 log = get_logger(__name__)
 

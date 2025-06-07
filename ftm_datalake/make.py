@@ -1,5 +1,5 @@
 """
-Make or update a leakrfc dataset and check integrity
+Make or update a ftm_datalake dataset and check integrity
 """
 
 from datetime import datetime
@@ -9,9 +9,9 @@ from anystore.decorators import anycache
 from anystore.exceptions import DoesNotExist
 from anystore.worker import WorkerStatus
 
-from leakrfc.archive.cache import get_cache
-from leakrfc.archive.dataset import DatasetArchive
-from leakrfc.worker import DatasetWorker, make_cache_key
+from ftm_datalake.archive.cache import get_cache
+from ftm_datalake.archive.dataset import DatasetArchive
+from ftm_datalake.worker import DatasetWorker, make_cache_key
 
 
 class MakeStatus(WorkerStatus):
@@ -113,13 +113,12 @@ class MakeWorker(DatasetWorker):
 
 def make_dataset(
     dataset: DatasetArchive,
-    use_cache: bool | None = True,
     check_integrity: bool | None = True,
     cleanup: bool | None = True,
     metadata_only: bool | None = False,
 ) -> MakeStatus:
     """
-    Make or update a leakrfc dataset and optionally check its integrity.
+    Make or update a ftm_datalake dataset and optionally check its integrity.
 
     Per default, this iterates through all the source files and creates (or
     updates) file metadata json files.
@@ -128,8 +127,7 @@ def make_dataset(
     created.
 
     Args:
-        dataset: leakrfc Dataset instance
-        use_cache: Use global processing cache to skip tasks
+        dataset: ftm_datalake Dataset instance
         check_integrity: Check checksum for each file (logs mismatches)
         cleanup: When checking integrity, fix mismatched metadata and delete
             unreferenced metadata files
@@ -137,7 +135,5 @@ def make_dataset(
             for new source files
 
     """
-    worker = MakeWorker(
-        check_integrity, cleanup, metadata_only, dataset, use_cache=use_cache
-    )
+    worker = MakeWorker(check_integrity, cleanup, metadata_only, dataset)
     return worker.run()

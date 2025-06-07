@@ -14,9 +14,9 @@ from ftmq.io import smart_read_proxies
 from ftmq.model import Catalog, Dataset, Resource
 from rigour.mime.types import FTM
 
-from leakrfc.archive import get_dataset
-from leakrfc.archive.cache import get_cache
-from leakrfc.connectors.aleph import (
+from ftm_datalake.archive import get_dataset
+from ftm_datalake.archive.cache import get_cache
+from ftm_datalake.connectors.aleph import (
     AlephDatasetWorker,
     make_aleph_cache_key,
     update_collection_metadata,
@@ -92,7 +92,6 @@ def load_dataset(
     host: str | None,
     api_key: str | None,
     foreign_id: str | None = None,
-    use_cache: bool | None = True,
     metadata: bool | None = True,
 ) -> AlephLoadDatasetStatus:
     dataset = Dataset._from_uri(uri)
@@ -103,7 +102,6 @@ def load_dataset(
         host=host,
         api_key=api_key,
         foreign_id=foreign_id,
-        use_cache=use_cache,
         metadata=metadata,
     )
     res = worker.run()
@@ -115,7 +113,6 @@ def load_catalog(
     host: str | None,
     api_key: str | None,
     foreign_id: str | None = None,
-    use_cache: bool | None = True,
     metadata: bool | None = True,
     exclude_dataset: str | None = None,
     include_dataset: str | None = None,
@@ -132,6 +129,5 @@ def load_catalog(
             host=host,
             api_key=api_key,
             foreign_id=foreign_id,
-            use_cache=use_cache,
             metadata=metadata,
         )

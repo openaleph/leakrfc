@@ -4,27 +4,27 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from leakrfc import __version__
-from leakrfc.archive import archive
-from leakrfc.logging import get_logger
-from leakrfc.model import File
-from leakrfc.settings import Settings
+from ftm_datalake import __version__
+from ftm_datalake.archive import archive
+from ftm_datalake.logging import get_logger
+from ftm_datalake.model import File
+from ftm_datalake.settings import Settings
 
 settings = Settings()
 log = get_logger(__name__)
 DEFAULT_ERROR = HTTPException(404)
-BASE_HEADER = {"x-leakrfc-version": __version__}
+BASE_HEADER = {"x-ftm-datalake-version": __version__}
 
 
 def get_file_header(file: File) -> dict[str, str]:
     return clean_dict(
         {
             **BASE_HEADER,
-            "x-leakrfc-dataset": file.dataset,
-            "x-leakrfc-key": file.key,
-            "x-leakrfc-sha1": file.content_hash,
-            "x-leakrfc-name": file.name,
-            "x-leakrfc-size": str(file.size),
+            "x-ftm-datalake-dataset": file.dataset,
+            "x-ftm-datalake-key": file.key,
+            "x-ftm-datalake-sha1": file.content_hash,
+            "x-ftm-datalake-name": file.name,
+            "x-ftm-datalake-size": str(file.size),
             "x-mimetype": file.mimetype,
             "content-type": file.mimetype,
         }

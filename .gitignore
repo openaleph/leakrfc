@@ -1,7 +1,7 @@
 _wip
 archive/*
 .anystore/*
-tests/fixtures/**/.leakrfc/*
+tests/fixtures/**/.ftm-datalake/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

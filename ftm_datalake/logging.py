@@ -21,7 +21,7 @@ from structlog.stdlib import (
 )
 from structlog.stdlib import get_logger as get_raw_logger
 
-from leakrfc.settings import Settings
+from ftm_datalake.settings import Settings
 
 settings = Settings()
 
